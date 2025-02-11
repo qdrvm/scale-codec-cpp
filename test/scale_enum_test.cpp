@@ -9,8 +9,8 @@
 #include <scale/scale.hpp>
 
 using scale::DecodeError;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 template <typename T>
 class ValidEnum : public testing::Test {

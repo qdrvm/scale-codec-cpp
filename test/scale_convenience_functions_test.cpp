@@ -10,8 +10,8 @@
 
 #include <scale/scale.hpp>
 
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 struct TestStruct {
   std::string a;

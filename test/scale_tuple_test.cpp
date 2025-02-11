@@ -9,8 +9,8 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 /**
  * @given 3 values of different types: uint8_t, uint32_t and uint8_t

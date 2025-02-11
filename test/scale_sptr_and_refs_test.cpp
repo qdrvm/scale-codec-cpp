@@ -12,8 +12,8 @@
 
 using scale::ByteArray;
 using scale::EncodeError;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 struct X {
   uint8_t a;

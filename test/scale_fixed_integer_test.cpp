@@ -10,8 +10,8 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 template <typename T>
 class IntegerTest : public testing::TestWithParam<std::pair<T, ByteArray>> {

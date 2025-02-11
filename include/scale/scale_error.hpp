@@ -8,9 +8,8 @@
  * @brief This file defines error codes for encoding and decoding operations
  * in the SCALE serialization format.
  *
- * SCALE (Simple Concatenated Aggregate Little-Endian) is a lightweight
- * serialization format commonly used in blockchain applications. This header
- * provides error handling mechanisms for encoding and decoding operations.
+ * This header provides error handling mechanisms for encoding and decoding
+ * operations.
  */
 
 #pragma once

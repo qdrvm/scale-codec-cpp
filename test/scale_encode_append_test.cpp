@@ -12,7 +12,7 @@
 #include <scale/scale.hpp>
 
 using scale::append_or_new_vec;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::encode;
 
 using Values = std::vector<uint16_t>;
 

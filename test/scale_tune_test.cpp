@@ -19,14 +19,14 @@ using scale::as_compact;
 using scale::ByteArray;
 using scale::Compact;
 using scale::ConstSpanOfBytes;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
 using scale::Decoder;
 using scale::Encoder;
 using scale::ScaleDecoder;
 using scale::ScaleEncoder;
 using scale::backend::FromBytes;
 using scale::backend::ToBytes;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 template <typename T, typename... Configs>
 outcome::result<std::vector<uint8_t>> encode_with_config(T &&value,

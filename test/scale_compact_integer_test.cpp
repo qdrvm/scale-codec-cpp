@@ -11,8 +11,8 @@
 using scale::ByteArray;
 using scale::DecodeError;
 using scale::EncodeError;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 // Maximum available weight integer
 using Compact = scale::Compact<boost::multiprecision::uint1024_t>;

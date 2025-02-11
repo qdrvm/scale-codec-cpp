@@ -15,8 +15,8 @@ using scale::BitVec;
 using scale::ByteArray;
 using scale::CompactInteger;
 using scale::DecodeError;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 using Encoder = scale::Encoder<scale::backend::ToBytes>;
 using Decoder = scale::Decoder<scale::backend::FromBytes>;
 

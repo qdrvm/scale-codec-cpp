@@ -11,8 +11,8 @@
 using scale::ByteArray;
 using scale::DecodeError;
 using scale::EncodeError;
-using scale::impl::with_buffer::decode;
-using scale::impl::with_buffer::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 using Decoder = scale::Decoder<scale::backend::FromBytes>;
 
 /**

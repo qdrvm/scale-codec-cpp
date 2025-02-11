@@ -26,30 +26,13 @@
 
 namespace scale::impl {
 
-  namespace with_buffer {
-
-// #ifdef CUSTOM_CONFIG_ENABLED
-//     template <typename T>
-//       requires(not ScaleEncoder<T>)
-//     outcome::result<ByteArray> encode(const T &v, const auto &config) {
-//       Encoder encoder(config);
-//       OUTCOME_TRY(encode(v, encoder));
-//       return outcome::success(encoder.to_vector());
-//     }
-//
-//     template <typename T>
-//       requires(not ScaleDecoder<T>)
-//     outcome::result<T> decode(ConstSpanOfBytes bytes, const auto &config) {
-//       Decoder decoder(bytes, config);
-//       T t;
-//       OUTCOME_TRY(decode(t, decoder));
-//       return outcome::success(std::move(t));
-//     }
-// #endif
+  // Well done implementation using outcome::result and data in memory
+  namespace memory {
+    using Encoder = Encoder<backend::ToBytes>;
 
     template <typename T>
     outcome::result<std::vector<uint8_t>> encode(T &&value) {
-      Encoder<backend::ToBytes> encoder;
+      Encoder encoder;
       try {
         encode(std::forward<T>(value), encoder);
       } catch (std::system_error &e) {
@@ -58,9 +41,11 @@ namespace scale::impl {
       return std::move(encoder).backend().to_vector();
     }
 
+    using Decoder = Decoder<backend::FromBytes>;
+
     template <typename T>
     outcome::result<T> decode(ConstSpanOfBytes bytes) {
-      Decoder<backend::FromBytes> decoder{bytes};
+      Decoder decoder{bytes};
       T value;
       try {
         decode(value, decoder);
@@ -69,6 +54,6 @@ namespace scale::impl {
       }
       return std::move(value);
     }
-  }  // namespace with_buffer
+  }  // namespace memory
 
 }  // namespace scale::impl
