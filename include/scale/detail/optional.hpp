@@ -153,7 +153,7 @@ namespace scale {
    * @param opt_bool The `optional<bool>` to decode.
    * @param decoder The SCALE decoder.
    */
-  void decode(OptionalBool auto &&opt_bool, ScaleDecoder auto &decoder)
+  void decode(OptionalBool auto &opt_bool, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(opt_bool)>
   {
     auto byte = decoder.take();
@@ -178,7 +178,7 @@ namespace scale {
    * @param optional The optional value to decode.
    * @param decoder The SCALE decoder.
    */
-  void decode(Optional auto &&optional, ScaleDecoder auto &decoder)
+  void decode(Optional auto &optional, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(optional)>
   {
     auto byte = decoder.take();
