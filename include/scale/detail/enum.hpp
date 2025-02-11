@@ -24,6 +24,7 @@
 
 #include <type_traits>
 
+#include <scale/detail/tagged.hpp>
 #include <scale/outcome/outcome_throw.hpp>
 #include <scale/scale_error.hpp>
 #include <scale/types.hpp>

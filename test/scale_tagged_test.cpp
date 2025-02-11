@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <qtils/test/outcome.hpp>
 #include <qtils/tagged.hpp>
+#include <qtils/test/outcome.hpp>
 
 #include <scale/scale.hpp>
 

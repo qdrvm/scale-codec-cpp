@@ -17,6 +17,7 @@
 
 #include <scale/detail/decomposable_type_traits.hpp>
 #include <scale/detail/decompose_and_apply.hpp>
+#include <scale/detail/tagged.hpp>
 
 namespace scale {
 

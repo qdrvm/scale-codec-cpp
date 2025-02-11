@@ -27,8 +27,8 @@
 #include <scale/detail/fixed_width_integer.hpp>
 #include <scale/detail/optional.hpp>
 #include <scale/detail/smart_pointers.hpp>
-#include <scale/detail/variant.hpp>
 #include <scale/detail/tagged.hpp>
+#include <scale/detail/variant.hpp>
 
 /**
  * @brief Provides implementations for SCALE encoding and decoding.
