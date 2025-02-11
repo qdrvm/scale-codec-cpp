@@ -5,11 +5,12 @@
  */
 
 /**
- * @brief Defines the Configurable class for managing custom configurations in SCALE serialization.
+ * @brief Defines the Configurable class for managing custom configurations in
+ * SCALE serialization.
  *
- * This class allows for optional configuration of encoding and decoding streams.
- * If custom configuration support is enabled, the class can store and retrieve
- * configuration objects dynamically.
+ * This class allows for optional configuration of encoding and decoding
+ * streams. If custom configuration support is enabled, the class can store and
+ * retrieve configuration objects dynamically.
  */
 
 #pragma once
@@ -33,10 +34,12 @@ namespace scale {
 
   /**
    * @class Configurable
-   * @brief Base class providing optional configuration support for SCALE serialization.
+   * @brief Base class providing optional configuration support for SCALE
+   * serialization.
    *
-   * This class enables the use of custom configurations when encoding or decoding.
-   * If custom configuration support is disabled, it functions as a no-op.
+   * This class enables the use of custom configurations when encoding or
+   * decoding. If custom configuration support is disabled, it functions as a
+   * no-op.
    */
   class Configurable {
    public:
@@ -58,7 +61,8 @@ namespace scale {
     }
 #else
     /**
-     * @brief Constructs a Configurable instance when custom configurations are disabled.
+     * @brief Constructs a Configurable instance when custom configurations are
+     * disabled.
      * @tparam ConfigTs Variadic template for configuration types.
      * @param configs Custom configuration objects (unused).
      */
@@ -72,7 +76,8 @@ namespace scale {
      * @brief Retrieves a stored configuration object.
      * @tparam T The type of the configuration object to retrieve.
      * @return Reference to the requested configuration object.
-     * @throws std::runtime_error If the requested configuration type was not provided.
+     * @throws std::runtime_error If the requested configuration type was not
+     * provided.
      */
     template <typename T>
       requires MaybeConfig<T>
@@ -101,7 +106,8 @@ namespace scale {
      * @brief Stores a configuration object.
      * @tparam ConfigT The type of the configuration object.
      * @param config The configuration object to store.
-     * @throws std::runtime_error If a configuration of the same type is already present.
+     * @throws std::runtime_error If a configuration of the same type is already
+     * present.
      */
     template <typename ConfigT>
     void addConfig(const ConfigT &config) {

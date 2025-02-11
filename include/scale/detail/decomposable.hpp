@@ -4,10 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Defines utilities for decomposing and applying operations
+ *        on decomposable types in SCALE serialization.
+ *
+ * This file provides functions for handling decomposition and
+ * encoding/decoding of various decomposable types such as arrays,
+ * structurally bindable types, and aggregates.
+ */
+
 #pragma once
 
-#include <scale/detail/decompose_and_apply.hpp>
 #include <scale/detail/decomposable_type_traits.hpp>
+#include <scale/detail/decompose_and_apply.hpp>
 
 namespace scale {
 
@@ -15,6 +24,13 @@ namespace scale {
 
     using namespace decomposable::array;
 
+    /**
+     * @brief Decomposes and applies a function to a decomposable array.
+     * @tparam F The function to apply.
+     * @param v The decomposable array.
+     * @param f The function to apply to decomposed elements.
+     * @return Result of applying the function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(DecomposableArray auto &&v, const F &f) {
       return decompose_and_apply<array_size<decltype(v)>>(
@@ -23,6 +39,13 @@ namespace scale {
 
     using namespace decomposable::structurally_bindable;
 
+    /**
+     * @brief Decomposes and applies a function to a structurally bindable type.
+     * @tparam F The function to apply.
+     * @param v The decomposable structurally bindable type.
+     * @param f The function to apply to decomposed elements.
+     * @return Result of applying the function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(
         DecomposableStructurallyBindable auto &&v, const F &f) {
@@ -32,6 +55,13 @@ namespace scale {
 
     using namespace decomposable::aggregate;
 
+    /**
+     * @brief Decomposes and applies a function to an aggregate type.
+     * @tparam F The function to apply.
+     * @param v The decomposable aggregate type.
+     * @param f The function to apply to decomposed elements.
+     * @return Result of applying the function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(DecomposableAggregate auto &&v,
                                        const F &f) {
@@ -43,6 +73,11 @@ namespace scale {
 
   using detail::decompose_and_apply;
 
+  /**
+   * @brief Encodes a decomposable object using SCALE encoding.
+   * @tparam decomposable The decomposable type to encode.
+   * @param encoder The encoder instance to write to.
+   */
   void encode(Decomposable auto &&decomposable, ScaleEncoder auto &encoder)
     requires NoTagged<decltype(decomposable)>
   {
@@ -50,6 +85,11 @@ namespace scale {
                         [&](auto &...args) { (encode(args, encoder), ...); });
   }
 
+  /**
+   * @brief Decodes a decomposable object using SCALE decoding.
+   * @tparam decomposable The decomposable type to decode.
+   * @param decoder The decoder instance to read from.
+   */
   void decode(Decomposable auto &decomposable, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(decomposable)>
   {

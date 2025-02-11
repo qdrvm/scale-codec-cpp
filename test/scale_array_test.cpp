@@ -8,8 +8,8 @@
 #include <qtils/test/outcome.hpp>
 #include <scale/scale.hpp>
 
-using scale::decode;
-using scale::encode;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 /**
  * @given collection of N of type uint8_t

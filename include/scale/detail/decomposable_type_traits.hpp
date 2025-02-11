@@ -4,16 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Defines concepts and utilities for decomposing different types
+ *        into their constituent fields for SCALE serialization.
+ *
+ * This file provides support for decomposing custom types, arrays,
+ * structurally bindable types, and aggregates in a way that facilitates
+ * serialization and deserialization.
+ */
+
 #pragma once
 
 #include <scale/detail/collections_type_traits.hpp>
-#include <scale/detail/type_traits.hpp>
 #include <scale/detail/custom_decomposition.hpp>
+#include <scale/detail/type_traits.hpp>
 
 namespace scale::detail::decomposable {
 
   namespace custom {
-
+    /**
+     * @brief Concept to check if a type is custom decomposable.
+     */
     template <typename T>
     concept is_custom_decomposable = requires(T &obj, const T &cobj) {
       {
@@ -24,13 +35,18 @@ namespace scale::detail::decomposable {
       };
     };
 
+    /**
+     * @brief Concept for custom decomposable types.
+     */
     template <typename T>
     concept CustomDecomposable = is_custom_decomposable<std::remove_cvref_t<T>>;
 
   }  // namespace custom
 
   namespace array {
-
+    /**
+     * @brief Concept to check if a type is an array.
+     */
     template <typename T>
     concept is_array =
         std::is_bounded_array_v<std::remove_cvref_t<T>>
@@ -56,13 +72,22 @@ namespace scale::detail::decomposable {
     inline constexpr std::size_t array_size =
         array_size_impl<std::remove_cvref_t<T>>::value;
 
+    /**
+     * @brief Concept for an array with a maximum allowed size.
+     */
     template <typename T, std::size_t N>
     concept ArrayWithMaxSize = is_array<T> and array_size<T> <= N;
 
+    /**
+     * @brief Concept for a decomposable array.
+     */
     template <typename T>
     concept DecomposableArray = not custom::CustomDecomposable<T>
                                 and ArrayWithMaxSize<T, MAX_FIELD_NUM>;
 
+    /**
+     * @brief Decomposes an array and applies a given function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(DecomposableArray auto &&v, const F &f) {
       return decompose_and_apply<array_size<decltype(v)>>(
@@ -73,6 +98,9 @@ namespace scale::detail::decomposable {
 
   namespace structurally_bindable {
 
+    /**
+     * @brief Concept for structurally bindable types.
+     */
     template <typename, typename = void>
     struct is_structurally_bindable : std::false_type {};
 
@@ -103,12 +131,19 @@ namespace scale::detail::decomposable {
         StructurallyBindable<T>
         and structured_binding_size_v<std::remove_cvref_t<T>> <= MAX_FIELD_NUM;
 
+    /**
+     * @brief Concept for decomposable structurally bindable types.
+     */
     template <typename T>
     concept DecomposableStructurallyBindable =
         (not custom::CustomDecomposable<T>)
         and (not array::DecomposableArray<T>)
         and StructurallyBindableWithMaxSize<T>;
 
+    /**
+     * @brief Decomposes a structurally bindable type and applies a given
+     * function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(
         DecomposableStructurallyBindable auto &&v, const F &f) {
@@ -148,10 +183,16 @@ namespace scale::detail::decomposable {
     template <typename T>
     concept Aggregate = std::is_aggregate_v<std::remove_cvref_t<T>>;
 
+    /**
+     * @brief Concept for an aggregate type with a maximum allowed size.
+     */
     template <typename T>
     concept AggregateWithMaxSize =
         Aggregate<T> and (field_number_of<T> <= MAX_FIELD_NUM);
 
+    /**
+     * @brief Concept for a decomposable aggregate type.
+     */
     template <typename T>
     concept DecomposableAggregate =
         (not custom::CustomDecomposable<T>)
@@ -159,6 +200,9 @@ namespace scale::detail::decomposable {
         and (not structurally_bindable::DecomposableStructurallyBindable<T>)
         and (not collections::Collection<T>) and AggregateWithMaxSize<T>;
 
+    /**
+     * @brief Decomposes an aggregate and applies a given function.
+     */
     template <typename F>
     decltype(auto) decompose_and_apply(DecomposableAggregate auto &&v,
                                        const F &f) {
@@ -175,15 +219,21 @@ namespace scale::detail::decomposable {
 
   struct NoDecompose {};
 
+  /**
+   * @brief Concept for types that are not decomposable.
+   */
   template <typename T>
   concept IsNotDecomposable =
       std::derived_from<std::remove_cvref_t<T>, NoDecompose>;
 
+  /**
+   * @brief Concept for decomposable types.
+   */
   template <typename T>
   concept Decomposable = not IsNotDecomposable<T>
-                         and (CustomDecomposable<T>    //
-                              or DecomposableArray<T>  //
-                              or DecomposableStructurallyBindable<T>
-                              or DecomposableAggregate<std::remove_cvref_t<T>>);
+                         and (CustomDecomposable<T>                   //
+                              or DecomposableArray<T>                 //
+                              or DecomposableStructurallyBindable<T>  //
+                              or DecomposableAggregate<T>);
 
 }  // namespace scale::detail::decomposable

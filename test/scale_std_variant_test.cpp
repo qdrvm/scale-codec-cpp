@@ -11,8 +11,8 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
-using scale::encode;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 using scale::get_variant;
 using Encoder = scale::Encoder<scale::backend::ToBytes>;
 using Decoder = scale::Decoder<scale::backend::FromBytes>;

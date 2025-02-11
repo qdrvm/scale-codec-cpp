@@ -8,8 +8,8 @@
  * @brief Provides utilities for analyzing constructor properties of types.
  *
  * This file defines utilities for determining the number of default arguments
- * that can be used to construct a given type. It helps in template metaprogramming
- * to infer constructor capabilities at compile-time.
+ * that can be used to construct a given type. It helps in template
+ * metaprogramming to infer constructor capabilities at compile-time.
  */
 
 #pragma once
@@ -36,7 +36,8 @@ namespace scale::detail::common {
    * @brief Checks if a type is constructible with N default arguments.
    * @tparam T The type to check.
    * @tparam Indices Index sequence representing argument positions.
-   * @return True if T is constructible with N default arguments, false otherwise.
+   * @return True if T is constructible with N default arguments, false
+   * otherwise.
    */
   template <typename T, std::size_t... Indices>
   constexpr bool is_constructible_with_n_def_args_impl(
@@ -45,7 +46,8 @@ namespace scale::detail::common {
   }
 
   /**
-   * @brief Determines if a type T is constructible with exactly N default arguments.
+   * @brief Determines if a type T is constructible with exactly N default
+   * arguments.
    * @tparam T The type to check.
    * @tparam N The number of default arguments.
    */
@@ -54,7 +56,8 @@ namespace scale::detail::common {
       is_constructible_with_n_def_args_impl<T>(std::make_index_sequence<N>{});
 
   /**
-   * @brief Recursively determines the maximum number of default constructor arguments.
+   * @brief Recursively determines the maximum number of default constructor
+   * arguments.
    * @tparam T The type to check.
    * @tparam N The current number of default arguments being tested.
    * @return The maximum number of default arguments supported by T.
@@ -69,7 +72,8 @@ namespace scale::detail::common {
   }
 
   /**
-   * @brief Computes the maximum number of default constructor arguments for a type.
+   * @brief Computes the maximum number of default constructor arguments for a
+   * type.
    * @tparam T The type to check.
    */
   template <typename T>

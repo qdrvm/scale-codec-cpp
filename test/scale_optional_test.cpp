@@ -9,14 +9,12 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
 using scale::DecodeError;
-using scale::encode;
 using scale::EncodeError;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 using Decoder = scale::Decoder<scale::backend::FromBytes>;
 
-// TODO(Harrm): PRE-119 refactor to parameterized tests
 /**
  * @given variety of optional values
  * @when encodeOptional function is applied

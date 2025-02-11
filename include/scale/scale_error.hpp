@@ -1,5 +1,5 @@
 /**
-* Copyright Quadrivium LLC
+ * Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -24,9 +24,10 @@ namespace scale {
    * @brief Provides error codes for encoding methods in SCALE serialization.
    */
   enum class EncodeError {
-    NEGATIVE_INTEGER,  ///< Encoding of negative integers is not supported.
-    DEREF_NULLPOINTER, ///< Attempt to dereference a null pointer.
-    VALUE_TOO_BIG_FOR_COMPACT_REPRESENTATION ///< Value is too large for compact representation.
+    NEGATIVE_INTEGER,   ///< Encoding of negative integers is not supported.
+    DEREF_NULLPOINTER,  ///< Attempt to dereference a null pointer.
+    VALUE_TOO_BIG_FOR_COMPACT_REPRESENTATION  ///< Value is too large for
+                                              ///< compact representation.
   };
 
   /**
@@ -39,8 +40,9 @@ namespace scale {
     TOO_MANY_ITEMS,       ///< Too many items, cannot address them in memory.
     WRONG_TYPE_INDEX,     ///< Incorrect type index, cannot decode variant.
     INVALID_ENUM_VALUE,   ///< Enum value does not belong to the expected enum.
-    REDUNDANT_COMPACT_ENCODING,      ///< Redundant bytes found in compact encoding.
-    DECODED_VALUE_OVERFLOWS_TARGET   ///< Decoded value overflows the target type.
+    REDUNDANT_COMPACT_ENCODING,  ///< Redundant bytes found in compact encoding.
+    DECODED_VALUE_OVERFLOWS_TARGET  ///< Decoded value overflows the target
+                                    ///< type.
   };
 
 }  // namespace scale

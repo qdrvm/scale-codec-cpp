@@ -7,8 +7,9 @@
 /**
  * @brief Defines the BitVec struct for encoding and decoding bit vectors.
  *
- * This struct provides an encoding mechanism compatible with Rust's `BitVec<u8, Lsb0>`.
- * It supports efficient serialization and deserialization using SCALE encoding.
+ * This struct provides an encoding mechanism compatible with Rust's `BitVec<u8,
+ * Lsb0>`. It supports efficient serialization and deserialization using SCALE
+ * encoding.
  */
 
 #pragma once
@@ -24,8 +25,8 @@ namespace scale {
    * @struct BitVec
    * @brief Represents a bit vector compatible with Rust's `BitVec<u8, Lsb0>`.
    *
-   * This structure enables efficient storage and serialization of boolean values
-   * using compact encoding.
+   * This structure enables efficient storage and serialization of boolean
+   * values using compact encoding.
    */
   struct BitVec : detail::decomposable::NoDecompose {
     /// @brief Stores the individual bits as a vector of boolean values.
@@ -34,7 +35,8 @@ namespace scale {
     /**
      * @brief Equality comparison operator.
      * @param other Another BitVec to compare against.
-     * @return True if both BitVec instances contain the same bits, false otherwise.
+     * @return True if both BitVec instances contain the same bits, false
+     * otherwise.
      */
     bool operator==(const BitVec &other) const {
       return bits == other.bits;

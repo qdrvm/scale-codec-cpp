@@ -9,12 +9,10 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
 using scale::DecodeError;
-using scale::encode;
 using scale::EncodeError;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 // Maximum available weight integer
 using Compact = scale::Compact<boost::multiprecision::uint1024_t>;

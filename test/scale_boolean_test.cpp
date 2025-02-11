@@ -9,12 +9,10 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
 using scale::DecodeError;
-using scale::encode;
 using scale::EncodeError;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 /**
  * @given bool values: true and false
@@ -23,12 +21,10 @@ using Decoder = scale::Decoder<scale::backend::FromBytes>;
  */
 TEST(ScaleBoolTest, EncodeBoolSuccess) {
   {
-    Encoder encoder;
     ASSERT_OUTCOME_SUCCESS(encoded, encode(true));
     ASSERT_EQ(encoded, ByteArray{0x1});
   }
   {
-    Encoder encoder;
     ASSERT_OUTCOME_SUCCESS(encoded, encode(false));
     ASSERT_EQ(encoded, ByteArray{0x0});
   }
@@ -51,7 +47,7 @@ struct ThreeBooleans {
  */
 TEST(ScaleBoolTest, fixedwidthDecodeBoolFail) {
   auto bytes = ByteArray{0, 1, 2};
-  ASSERT_OUTCOME_ERROR(scale::decode<ThreeBooleans>(bytes),
+  ASSERT_OUTCOME_ERROR(decode<ThreeBooleans>(bytes),
                        DecodeError::UNEXPECTED_VALUE);
 }
 

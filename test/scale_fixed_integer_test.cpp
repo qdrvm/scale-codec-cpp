@@ -10,12 +10,11 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 template <typename T>
-class IntegerTest : public ::testing::TestWithParam<std::pair<T, ByteArray>> {
+class IntegerTest : public testing::TestWithParam<std::pair<T, ByteArray>> {
  public:
   static std::pair<T, ByteArray> make_pair(const T &value,
                                            const ByteArray &match) {
@@ -23,9 +22,6 @@ class IntegerTest : public ::testing::TestWithParam<std::pair<T, ByteArray>> {
   }
 
   using value_type = T;
-
- protected:
-  Encoder encoder;
 };
 
 /**
@@ -40,17 +36,14 @@ class Int8Test : public IntegerTest<int8_t> {};
  */
 TEST_P(Int8Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
 
 TEST_P(Int8Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(Int8TestCases,
@@ -74,7 +67,6 @@ class Uint8Test : public IntegerTest<uint8_t> {};
  */
 TEST_P(Uint8Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -85,11 +77,9 @@ TEST_P(Uint8Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Uint8Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(Uint8TestCases,
@@ -110,7 +100,6 @@ class Int16Test : public IntegerTest<int16_t> {};
  */
 TEST_P(Int16Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -121,11 +110,9 @@ TEST_P(Int16Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Int16Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -150,7 +137,6 @@ class Uint16Test : public IntegerTest<uint16_t> {};
  */
 TEST_P(Uint16Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -161,11 +147,9 @@ TEST_P(Uint16Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Uint16Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -186,7 +170,6 @@ class Int32Test : public IntegerTest<int32_t> {};
  */
 TEST_P(Int32Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -197,11 +180,9 @@ TEST_P(Int32Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Int32Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -223,7 +204,6 @@ class Uint32Test : public IntegerTest<uint32_t> {};
  */
 TEST_P(Uint32Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -234,11 +214,9 @@ TEST_P(Uint32Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Uint32Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -259,7 +237,6 @@ class Int64Test : public IntegerTest<int64_t> {};
  */
 TEST_P(Int64Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -270,11 +247,9 @@ TEST_P(Int64Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Int64Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -296,7 +271,6 @@ class Uint64Test : public IntegerTest<uint64_t> {};
  */
 TEST_P(Uint64Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -307,11 +281,9 @@ TEST_P(Uint64Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Uint64Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(Uint64TestCases,
@@ -331,7 +303,6 @@ class Uint128Test : public IntegerTest<scale::uint128_t> {};
  */
 TEST_P(Uint128Test, EncodeSuccess) {
   auto [value, match] = GetParam();
-  Encoder encoder;
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
   ASSERT_EQ(encoded, match);
 }
@@ -342,11 +313,9 @@ TEST_P(Uint128Test, EncodeSuccess) {
  * @then resulting number matches predefined one
  */
 TEST_P(Uint128Test, DecodeSuccess) {
-  auto [value, match] = GetParam();
-  Decoder decoder(match);
-  value_type v{0};
-  ASSERT_NO_THROW((decoder >> v));
-  ASSERT_EQ(v, value);
+  auto [match, bytes] = GetParam();
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<value_type>(bytes));
+  ASSERT_EQ(decoded, match);
 }
 
 INSTANTIATE_TEST_SUITE_P(

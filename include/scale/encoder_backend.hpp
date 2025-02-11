@@ -1,5 +1,5 @@
 /**
-* Copyright Quadrivium LLC
+ * Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -27,9 +27,8 @@ namespace scale {
    * byte-oriented buffer. This interface is designed to be inherited by
    * concrete encoding classes.
    */
-  class EncoderBackend
-  {
-  public:
+  class EncoderBackend {
+   public:
     /// @brief Virtual destructor for proper cleanup in derived classes.
     virtual ~EncoderBackend() = default;
 
@@ -52,4 +51,4 @@ namespace scale {
     [[nodiscard]] virtual size_t size() const = 0;
   };
 
-} // namespace scale
+}  // namespace scale

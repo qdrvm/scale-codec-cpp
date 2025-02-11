@@ -4,8 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Defines error categories for SCALE encoding and decoding.
+ *
+ * This file contains the implementation of error categories for
+ * SCALE encoding and decoding errors, allowing them to be
+ * used with the Outcome error handling library.
+ */
+
 #include <scale/scale_error.hpp>
 
+/**
+ * @brief Defines the error category for SCALE encoding errors.
+ * @param e The specific encoding error.
+ * @return A string describing the error.
+ */
 OUTCOME_CPP_DEFINE_CATEGORY(scale, EncodeError, e) {
   using scale::EncodeError;
   switch (e) {
@@ -19,6 +32,11 @@ OUTCOME_CPP_DEFINE_CATEGORY(scale, EncodeError, e) {
   return "unknown EncodeError";
 }
 
+/**
+ * @brief Defines the error category for SCALE decoding errors.
+ * @param e The specific decoding error.
+ * @return A string describing the error.
+ */
 OUTCOME_CPP_DEFINE_CATEGORY(scale, DecodeError, e) {
   using scale::DecodeError;
   switch (e) {

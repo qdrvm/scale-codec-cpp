@@ -22,7 +22,7 @@ namespace scale {
    */
   outcome::result<std::tuple<uint32_t, uint32_t, uint32_t>> extract_length_data(
       const std::vector<uint8_t> &data) {
-    OUTCOME_TRY(len, scale::decode<Compact<uint32_t>>(data));
+    OUTCOME_TRY(len, impl::with_buffer::decode<Compact<uint32_t>>(data));
     auto old_len = untagged(len);
     auto new_len = old_len + 1;
     auto encoded_len = lengthOfEncodedCompactInteger(old_len);
@@ -46,7 +46,7 @@ namespace scale {
     const auto &[new_len, encoded_len, encoded_new_len] = extract_tuple;
 
     auto replace_len = [new_len = new_len](std::vector<uint8_t> &dest) {
-      auto e = encode(as_compact(new_len)).value();
+      auto e = impl::with_buffer::encode(as_compact(new_len)).value();
       std::move(e.begin(), e.end(), dest.begin());
     };
 

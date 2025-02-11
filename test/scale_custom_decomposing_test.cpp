@@ -8,10 +8,8 @@
 #include <qtils/test/outcome.hpp>
 #include <scale/scale.hpp>
 
-using scale::decode;
-using scale::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 struct CustomDecomposableObject {
   CustomDecomposableObject() : a(0xff), b(0xff), c(0xff), d(0xff), e(0xff) {}
@@ -35,7 +33,7 @@ TEST(CustomDecomposable, encode) {
 
   std::vector expected = {x.b, x.c, x.d};
 
-  ASSERT_OUTCOME_SUCCESS(actual, scale::encode(x));
+  ASSERT_OUTCOME_SUCCESS(actual, encode(x));
   EXPECT_EQ(expected, actual);
 }
 
@@ -44,6 +42,6 @@ TEST(CustomDecomposable, decode) {
 
   CustomDecomposableObject expected(0xff, 1, 2, 3, 0xff);
 
-  ASSERT_OUTCOME_SUCCESS(actual, scale::decode<CustomDecomposableObject>(data));
+  ASSERT_OUTCOME_SUCCESS(actual, decode<CustomDecomposableObject>(data));
   EXPECT_EQ(expected, actual);
 }

@@ -4,6 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Provides encoding and decoding utilities for collections
+ *        in SCALE serialization.
+ *
+ * This file defines functions to handle encoding and decoding
+ * of different types of collections, including static, dynamic,
+ * resizable, and extensible collections.
+ */
+
 #pragma once
 
 #include <scale/detail/collections_type_traits.hpp>
@@ -20,11 +29,15 @@ namespace scale {
   using detail::decomposable::Decomposable;
   using detail::decomposable::DecomposableArray;
 
+  /**
+   * @brief Encodes a dynamic collection using SCALE encoding.
+   * @param collection The collection to encode.
+   * @param encoder The encoder instance to write to.
+   */
   void encode(DynamicCollection auto &&collection, ScaleEncoder auto &encoder)
     requires NoTagged<decltype(collection)>
              and (not std::same_as<std::remove_cvref_t<decltype(collection)>,
                                    std::vector<bool>>)
-  // and (not Decomposable<std::remove_cvref_t<decltype(collection)>>)
   {
     encode(as_compact(collection.size()), encoder);
     for (auto &&item : std::forward<decltype(collection)>(collection)) {
@@ -32,6 +45,11 @@ namespace scale {
     }
   }
 
+  /**
+   * @brief Encodes a static collection using SCALE encoding.
+   * @param collection The collection to encode.
+   * @param encoder The encoder instance to write to.
+   */
   void encode(StaticCollection auto &&collection, ScaleEncoder auto &encoder)
     requires NoTagged<decltype(collection)>
              and (not DecomposableArray<decltype(collection)>)
@@ -41,6 +59,11 @@ namespace scale {
     }
   }
 
+  /**
+   * @brief Encodes a string view using SCALE encoding.
+   * @param view The string view to encode.
+   * @param encoder The encoder instance to write to.
+   */
   void encode(const std::string_view view, ScaleEncoder auto &encoder)
     requires NoTagged<decltype(view)>
   {
@@ -49,6 +72,11 @@ namespace scale {
         {reinterpret_cast<const uint8_t *>(view.data()), view.size()});
   }
 
+  /**
+   * @brief Encodes a vector of boolean values using SCALE encoding.
+   * @param vector The boolean vector to encode.
+   * @param encoder The encoder instance to write to.
+   */
   template <typename T>
     requires std::same_as<std::remove_cvref_t<T>, std::vector<bool>>
   void encode(T &&vector, ScaleEncoder auto &encoder)
@@ -60,11 +88,17 @@ namespace scale {
     }
   }
 
-  /// @note Implementation prohibited as potentially dangerous.
-  /// Use manual decoding instead
+  /**
+   * @brief Decoding for dynamic spans is prohibited as potentially dangerous.
+   */
   void decode(DynamicSpan auto &collection,
               ScaleDecoder auto &decoder) = delete;
 
+  /**
+   * @brief Decodes a static collection using SCALE decoding.
+   * @param collection The collection to decode.
+   * @param decoder The decoder instance to read from.
+   */
   void decode(StaticCollection auto &collection, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(collection)>
              and (not Decomposable<decltype(collection)>)
@@ -74,6 +108,11 @@ namespace scale {
     }
   }
 
+  /**
+   * @brief Decodes an extensible back collection using SCALE decoding.
+   * @param collection The collection to decode.
+   * @param decoder The decoder instance to read from.
+   */
   void decode(ExtensibleBackCollection auto &collection,
               ScaleDecoder auto &decoder)
     requires NoTagged<decltype(collection)>
@@ -99,6 +138,11 @@ namespace scale {
     }
   }
 
+  /**
+   * @brief Decodes a resizable collection using SCALE decoding.
+   * @param collection The collection to decode.
+   * @param decoder The decoder instance to read from.
+   */
   void decode(ResizeableCollection auto &collection, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(collection)>
   {
@@ -120,9 +164,9 @@ namespace scale {
   }
 
   /**
-   * @brief scale-decodes to non-sequential collection (which can not be
-   * reserved space or resize, but each element can be emplaced while
-   * decoding)
+   * @brief Decodes a random extensible collection using SCALE decoding.
+   * @note non-sequential collection, which can not be reserved space or resize,
+   * but each element can be emplaced while decoding
    */
   void decode(RandomExtensibleCollection auto &collection,
               ScaleDecoder auto &decoder)
@@ -149,6 +193,11 @@ namespace scale {
     }
   }
 
+  /**
+   * @brief Decodes a vector of booleans using SCALE decoding.
+   * @param collection The collection to decode.
+   * @param decoder The decoder instance to read from.
+   */
   void decode(std::vector<bool> &collection, ScaleDecoder auto &decoder) {
     size_t item_count;
     decode(as_compact(item_count), decoder);

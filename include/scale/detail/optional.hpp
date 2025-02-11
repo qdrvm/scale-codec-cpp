@@ -5,11 +5,12 @@
  */
 
 /**
- * @brief Provides encoding and decoding functions for optional types in SCALE codec.
+ * @brief Provides encoding and decoding functions for optional types in SCALE
+ * codec.
  *
- * This file defines utilities for handling both `std::optional` and `boost::optional`
- * in SCALE encoding and decoding processes. Special handling is provided for `optional<bool>`
- * to optimize encoding space.
+ * This file defines utilities for handling both `std::optional` and
+ * `boost::optional` in SCALE encoding and decoding processes. Special handling
+ * is provided for `optional<bool>` to optimize encoding space.
  */
 
 #pragma once
@@ -47,7 +48,8 @@ namespace scale {
      * @tparam T The type to check.
      */
     template <typename T>
-    constexpr bool is_std_optional = is_std_optional_impl<std::remove_cvref_t<T>>::value;
+    constexpr bool is_std_optional =
+        is_std_optional_impl<std::remove_cvref_t<T>>::value;
 
     /**
      * @brief Concept for `std::optional`.
@@ -74,7 +76,8 @@ namespace scale {
      * @tparam T The type to check.
      */
     template <typename T>
-    constexpr bool is_boost_optional = is_boost_optional_impl<std::remove_cvref_t<T>>::value;
+    constexpr bool is_boost_optional =
+        is_boost_optional_impl<std::remove_cvref_t<T>>::value;
 
     /**
      * @brief Extracts the value type from an optional type.
@@ -83,7 +86,8 @@ namespace scale {
      */
     template <typename T>
       requires is_std_optional<T> or is_boost_optional<T>
-    using optional_value_type = std::remove_cvref_t<decltype(*std::declval<T>())>;
+    using optional_value_type =
+        std::remove_cvref_t<decltype(*std::declval<T>())>;
 
     /**
      * @brief Concept for `optional<bool>`.
@@ -95,7 +99,8 @@ namespace scale {
      * @brief Concept for optional types excluding `optional<bool>`.
      */
     template <typename T>
-    concept Optional = (is_std_optional<T> or is_boost_optional<T>) and not OptionalBool<T>;
+    concept Optional =
+        (is_std_optional<T> or is_boost_optional<T>) and not OptionalBool<T>;
 
   }  // namespace detail::optional
 

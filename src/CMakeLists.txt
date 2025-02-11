@@ -11,8 +11,6 @@ add_custom_command(
 )
 
 add_library(scale
-    encoder.cpp
-    decoder.cpp
     scale_error.cpp
     ${DECOMPOSE_AND_APPLY_HPP}
     )

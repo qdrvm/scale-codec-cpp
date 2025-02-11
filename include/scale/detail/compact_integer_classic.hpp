@@ -8,8 +8,9 @@
  * @brief Provides encoding and decoding functions for compact integer
  *        representation using SCALE encoding.
  *
- * The CLASSIC compact integer encoding is a variable-length encoding scheme optimized
- * for small numbers while still supporting large values. The encoding follows these rules:
+ * The CLASSIC compact integer encoding is a variable-length encoding scheme
+ * optimized for small numbers while still supporting large values. The encoding
+ * follows these rules:
  *
  * 1. **Single-byte representation (1 byte)**
  *    - If the integer is smaller than 2^6 (64), it is encoded in a single byte.
@@ -17,33 +18,40 @@
  *    - The remaining 6 bits store the value.
  *
  * 2. **Two-byte representation (2 bytes)**
- *    - If the integer is between 2^6 (64) and 2^14 (16384), it is encoded in two bytes.
+ *    - If the integer is between 2^6 (64) and 2^14 (16384), it is encoded in
+ * two bytes.
  *    - The two LSBs of the first byte are set to `0b01`.
  *    - The remaining 14 bits store the value.
  *
  * 3. **Four-byte representation (4 bytes)**
- *    - If the integer is between 2^14 (16384) and 2^30 (1073741824), it is encoded in four bytes.
+ *    - If the integer is between 2^14 (16384) and 2^30 (1073741824), it is
+ * encoded in four bytes.
  *    - The two LSBs of the first byte are set to `0b10`.
  *    - The remaining 30 bits store the value.
  *
  * 4. **Multibyte representation (variable length)**
- *    - If the integer is greater than 2^30 (1073741824), it is encoded using multiple bytes.
+ *    - If the integer is greater than 2^30 (1073741824), it is encoded using
+ * multiple bytes.
  *    - The two LSBs of the first byte are set to `0b11`.
- *    - The remaining 6 bits of the first byte store the number of bytes required minus 4.
- *    - The actual integer value is stored in little-endian order in the following bytes.
+ *    - The remaining 6 bits of the first byte store the number of bytes
+ * required minus 4.
+ *    - The actual integer value is stored in little-endian order in the
+ * following bytes.
  *
  * **Decoding follows the reverse process**:
  * - The two LSBs of the first byte determine the encoding format.
- * - The remaining bits and additional bytes (if needed) reconstruct the original integer.
+ * - The remaining bits and additional bytes (if needed) reconstruct the
+ * original integer.
  *
- * This encoding ensures that smaller values occupy fewer bytes, leading to efficient storage
- * and transmission in SCALE-encoded data structures.
+ * This encoding ensures that smaller values occupy fewer bytes, leading to
+ * efficient storage and transmission in SCALE-encoded data structures.
  */
 
 #pragma once
 
 #ifdef COMPACT_INTEGER_TYPE
-static_assert(!"Already activated another type of CompactInteger: " COMPACT_INTEGER_TYPE);
+static_assert(
+    !"Already activated another type of CompactInteger: " COMPACT_INTEGER_TYPE);
 #endif
 #define COMPACT_INTEGER_TYPE "CLASSIC"
 

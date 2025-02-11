@@ -11,11 +11,9 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
-using scale::encode;
 using scale::EncodeError;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 struct X {
   uint8_t a;
@@ -78,4 +76,3 @@ TEST(SmartPointersAndRef, RefWrapper_SuccessEncode) {
   ASSERT_OUTCOME_SUCCESS(encoded, encode(std::cref(value)));
   ASSERT_EQ(encoded, expected);
 }
-

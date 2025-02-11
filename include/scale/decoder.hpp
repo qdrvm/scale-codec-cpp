@@ -14,11 +14,11 @@
 #pragma once
 
 #include <scale/configurable.hpp>
-#include <scale/encoder_backend.hpp>
-#include <scale/types.hpp>
 #include <scale/detail/type_traits.hpp>
-#include <scale/scale_error.hpp>
+#include <scale/encoder_backend.hpp>
 #include <scale/outcome/outcome_throw.hpp>
+#include <scale/scale_error.hpp>
+#include <scale/types.hpp>
 
 namespace scale {
 
@@ -57,7 +57,8 @@ namespace scale {
           backend_(std::get<I1>(std::forward_as_tuple(args...))...) {}
 
     /**
-     * @brief Constructs a Decoder with a specified number of configuration arguments.
+     * @brief Constructs a Decoder with a specified number of configuration
+     * arguments.
      * @tparam N Number of configuration arguments.
      * @tparam Args Variadic template arguments.
      */
@@ -135,7 +136,7 @@ namespace scale {
     }
 
    private:
-    BackendType backend_; ///< Backend instance used for decoding.
+    BackendType backend_;  ///< Backend instance used for decoding.
   };
 
 }  // namespace scale

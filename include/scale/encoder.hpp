@@ -96,7 +96,7 @@ namespace scale {
     }
 
    private:
-    EncoderBackendT backend_; ///< Backend instance used for encoding.
+    EncoderBackendT backend_;  ///< Backend instance used for encoding.
   };
 
 }  // namespace scale

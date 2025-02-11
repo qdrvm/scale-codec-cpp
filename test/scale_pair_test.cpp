@@ -10,10 +10,8 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::encode;
-using scale::decode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 /**
  * @given pair of values of different types: uint8_t and uint32_t
@@ -23,8 +21,6 @@ using Decoder = scale::Decoder<scale::backend::FromBytes>;
 TEST(Pair, Encode) {
   uint8_t v1 = 1;
   uint32_t v2 = 2;
-
-  Encoder encoder;
 
   ASSERT_OUTCOME_SUCCESS(encoded, encode(std::make_pair(v1, v2)));
   ASSERT_EQ(encoded, (ByteArray{1, 2, 0, 0, 0}));

@@ -9,10 +9,8 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
-using scale::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::with_buffer::decode;
+using scale::impl::with_buffer::encode;
 
 /**
  * @given 3 values of different types: uint8_t, uint32_t and uint8_t
@@ -56,6 +54,6 @@ TEST(Tuple, EncodeAndDecode) {
   Tuple tuple = {1, 3, 2, 4};
 
   ASSERT_OUTCOME_SUCCESS(actual_bytes, encode(tuple));
-  ASSERT_OUTCOME_SUCCESS(decoded, scale::decode<Tuple>(actual_bytes));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<Tuple>(actual_bytes));
   ASSERT_EQ(decoded, tuple);
 }

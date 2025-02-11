@@ -1,5 +1,5 @@
 /**
-* Copyright Quadrivium LLC
+ * Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -28,14 +28,15 @@ namespace scale {
    * concrete decoding classes.
    */
   class DecoderBackend {
-  public:
+   public:
     /// @brief Virtual destructor for proper cleanup in derived classes.
     virtual ~DecoderBackend() = default;
 
     /**
      * @brief Checks if the decoder has the specified amount of data available.
      * @param amount The number of bytes to check for.
-     * @return True if the specified amount of data is available, false otherwise.
+     * @return True if the specified amount of data is available, false
+     * otherwise.
      */
     [[nodiscard]] virtual bool has(size_t amount) const = 0;
 

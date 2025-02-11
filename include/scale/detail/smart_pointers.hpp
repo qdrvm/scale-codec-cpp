@@ -5,22 +5,26 @@
  */
 
 /**
- * @brief Implements encoding and decoding functions for smart pointers using SCALE encoding.
+ * @brief Implements encoding and decoding functions for smart pointers using
+ * SCALE encoding.
  *
- * This file provides support for encoding and decoding `std::shared_ptr`, `std::unique_ptr`,
- * and `std::reference_wrapper` using the SCALE encoding scheme. The implementation ensures
- * safe serialization of pointer-based structures while handling null values and object
- * lifetimes appropriately.
+ * This file provides support for encoding and decoding `std::shared_ptr`,
+ * `std::unique_ptr`, and `std::reference_wrapper` using the SCALE encoding
+ * scheme. The implementation ensures safe serialization of pointer-based
+ * structures while handling null values and object lifetimes appropriately.
  *
  * ## Encoding Strategy:
- * - `std::shared_ptr<T>`: Encodes the underlying object if the pointer is non-null,
- *   otherwise raises an error.
- * - `std::unique_ptr<T>`: Similar to `shared_ptr`, encodes the object or raises an error.
+ * - `std::shared_ptr<T>`: Encodes the underlying object if the pointer is
+ * non-null, otherwise raises an error.
+ * - `std::unique_ptr<T>`: Similar to `shared_ptr`, encodes the object or raises
+ * an error.
  * - `std::reference_wrapper<T>`: Encodes the referenced object directly.
  *
  * ## Decoding Strategy:
- * - `std::shared_ptr<T>`: Constructs a new shared instance of `T` and decodes its contents.
- * - `std::unique_ptr<T>`: Creates a unique instance of `T` and decodes its contents.
+ * - `std::shared_ptr<T>`: Constructs a new shared instance of `T` and decodes
+ * its contents.
+ * - `std::unique_ptr<T>`: Creates a unique instance of `T` and decodes its
+ * contents.
  * - `std::reference_wrapper<T>`: Decodes the referenced object directly.
  */
 
@@ -111,7 +115,8 @@ namespace scale {
   /**
    * @brief Decodes a `std::reference_wrapper<T>` using SCALE encoding.
    * @tparam T The type referenced.
-   * @param reference The reference wrapper where the decoded value will be stored.
+   * @param reference The reference wrapper where the decoded value will be
+   * stored.
    * @param decoder SCALE decoder.
    */
   template <typename T>
