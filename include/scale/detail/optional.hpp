@@ -137,6 +137,10 @@ namespace scale {
     }
   }
 
+  void encode(const std::nullopt_t &, ScaleEncoder auto &encoder) {
+    encoder.put(0);
+  }
+
   /**
    * @brief Decodes an `optional<bool>` value from SCALE format.
    *

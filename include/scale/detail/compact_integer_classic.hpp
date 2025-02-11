@@ -47,13 +47,9 @@ static_assert(!"Already activated another type of CompactInteger: " COMPACT_INTE
 #endif
 #define COMPACT_INTEGER_TYPE "CLASSIC"
 
-#include <cstddef>
-#include <cstdint>
-
+#include <scale/definitions.hpp>
 #include <scale/detail/fixed_width_integer.hpp>
-#include <scale/outcome/outcome_throw.hpp>
 #include <scale/scale_error.hpp>
-#include <scale/types.hpp>
 #include <scale/unreachable.hpp>
 
 namespace scale {

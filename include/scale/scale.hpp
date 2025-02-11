@@ -6,18 +6,16 @@
 
 #pragma once
 
-#include <boost/system/system_error.hpp>
-#include <boost/throw_exception.hpp>
-
 #include <qtils/outcome.hpp>
-#include <scale/configurable.hpp>
-#include <scale/definitions.hpp>
+
 #include <scale/detail/compact_integer.hpp>
 #include <scale/detail/enum.hpp>
 #include <scale/detail/fixed_width_integer.hpp>
 #include <scale/detail/optional.hpp>
 #include <scale/detail/smart_pointers.hpp>
 #include <scale/detail/variant.hpp>
+#include <scale/detail/collections.hpp>
+#include <scale/detail/decomposable.hpp>
 
 #include <scale/decoder.hpp>
 #include <scale/encoder.hpp>

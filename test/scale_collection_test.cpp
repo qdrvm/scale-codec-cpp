@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <qtils/test/outcome.hpp>
+#include <scale/bitvec.hpp>
 #include <scale/scale.hpp>
 
 using scale::as_compact;
@@ -70,12 +71,13 @@ TEST(CollectionTest, encodeVectorOfBool) {
 }
 
 TEST(CollectionTest, encodeBitVec) {
-  auto collection = BitVec{{
+  BitVec collection;
+  collection.bits = {
       // clang-format off
       true, true, false, false, false, false, true, false, // 01000011
       false, true, true, false, false                      // ___00110
       // clang-format on
-  }};
+  };
   ByteArray vector_representation = {0b01000011, 0b00110};
 
   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));

@@ -26,14 +26,8 @@ static_assert(
 #endif
 #define COMPACT_INTEGER_TYPE "JAM"
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-
-#include <scale/detail/compact_integer.hpp>
 #include <scale/outcome/outcome_throw.hpp>
 #include <scale/scale_error.hpp>
-#include <scale/types.hpp>
 
 namespace scale {
 

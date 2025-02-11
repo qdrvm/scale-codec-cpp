@@ -4,59 +4,63 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Defines the Decoder class for SCALE deserialization.
+ *
+ * This class provides a generic decoding mechanism using a configurable
+ * backend. It supports custom configurations when enabled at compile-time.
+ */
+
 #pragma once
 
-#include <iterator>
-#include <memory>
-#include <optional>
-#include <type_traits>
-#include <utility>
-#include <variant>
-#include <vector>
-
-#include <boost/endian/buffers.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <qtils/tagged.hpp>
-
-#include <scale/bitvec.hpp>
-// ReSharper disable once CppUnusedIncludeDirective
-#include <scale/definitions.hpp>
-#include <scale/detail/fixed_width_integer.hpp>
-#ifdef JAM_COMPATIBILITY_ENABLED
-#include <scale/detail/jam_compact_integer.hpp>
-#else
-#include <scale/detail/compact_integer.hpp>
-#endif
-
-#include <qtils/outcome.hpp>
-
-#include <scale/backend/from_bytes.hpp>
 #include <scale/configurable.hpp>
-#include <scale/detail/decompose_and_apply.hpp>
+#include <scale/encoder_backend.hpp>
+#include <scale/types.hpp>
+#include <scale/detail/type_traits.hpp>
 #include <scale/scale_error.hpp>
+#include <scale/outcome/outcome_throw.hpp>
 
 namespace scale {
 
+  /**
+   * @class Decoder
+   * @brief A generic SCALE decoder using a backend for byte extraction.
+   * @tparam DecoderBackendT The backend type that implements decoding logic.
+   *
+   * This class extends Configurable and provides an interface to decode data
+   * using a backend. It supports custom configurations when enabled at
+   * compile-time.
+   */
   template <typename DecoderBackendT>
     requires std::derived_from<DecoderBackendT, DecoderBackend>
   class Decoder : public Configurable {
    public:
+    /// @brief Type alias for the backend used in decoding.
     using BackendType = DecoderBackendT;
 
     struct Z {};
 
-    static constexpr auto N = detail::max_constructor_args<BackendType>;
+    static constexpr auto N = detail::common::max_constructor_args<BackendType>;
 
+    /**
+     * @brief Constructs a Decoder with backend and configuration parameters.
+     * @tparam I1 Index sequence for backend constructor arguments.
+     * @tparam I2 Index sequence for configuration constructor arguments.
+     * @tparam Args Variadic template arguments.
+     */
     template <std::size_t... I1, std::size_t... I2, typename... Args>
     explicit Decoder(Z,
                      std::index_sequence<I1...>,
                      std::index_sequence<I2...>,
                      Args &&...args)
         : Configurable(std::get<I2>(std::forward_as_tuple(args...))...),
-          backend_(std::get<I1>(std::forward_as_tuple(args...))...) {
-      std::cout << "Decoder constructed\n";
-    }
+          backend_(std::get<I1>(std::forward_as_tuple(args...))...) {}
 
+    /**
+     * @brief Constructs a Decoder with a specified number of configuration arguments.
+     * @tparam N Number of configuration arguments.
+     * @tparam Args Variadic template arguments.
+     */
     template <std::size_t N, typename... Args>
     explicit Decoder(Args &&...args)
         : Decoder(Z{},
@@ -64,22 +68,35 @@ namespace scale {
                   std::make_index_sequence<N>{},
                   std::forward<Args>(args)...) {}
 
+    /// @brief Provides access to the decoding backend.
+    /// @return Reference to the backend instance.
     auto &backend() {
       return backend_;
     }
 
 #ifdef CUSTOM_CONFIG_ENABLED
+    /**
+     * @brief Constructs a decoder with custom configurations.
+     * @param data Immutable span of bytes to decode.
+     * @param configs Configuration parameters.
+     */
     explicit Decoder(ConstSpanOfBytes data, const MaybeConfig auto &...configs)
         : Configurable(configs...), backend_(data) {}
 #else
-    // [[deprecated("Scale has compiled without custom config support")]]  //
-    // Decoder(ConstSpanOfBytes data,
-    //                    const MaybeConfig auto &...configs) = delete;
-
+    /**
+     * @brief Constructs a decoder without custom configurations.
+     * @tparam Args Variadic template arguments for backend initialization.
+     */
     template <typename... Args>
     explicit Decoder(Args &&...args) : backend_(std::forward<Args>(args)...) {}
 #endif
 
+    /**
+     * @brief Decodes a value using the backend.
+     * @tparam T The type of the value to decode.
+     * @param value The value to decode.
+     * @return Reference to the decoder for chaining operations.
+     */
     template <typename T>
     Decoder &operator>>(T &&value) {
       decode(std::forward<T>(value), *this);
@@ -87,16 +104,17 @@ namespace scale {
     }
 
     /**
-     * @brief hasMore Checks whether n more bytes are available
-     * @param n Number of bytes to check
-     * @return True if n more bytes are available and false otherwise
+     * @brief Checks whether n more bytes are available.
+     * @param n Number of bytes to check.
+     * @return True if n more bytes are available, false otherwise.
      */
     [[nodiscard]] bool has(uint64_t n) const {
       return backend_.has(n);
     }
 
     /**
-     * @brief takes one byte from backend
+     * @brief Takes one byte from the backend.
+     * @return The byte read from the backend.
      */
     uint8_t take() {
       if (not backend_.has(1)) {
@@ -105,6 +123,10 @@ namespace scale {
       return backend_.take();
     }
 
+    /**
+     * @brief Reads a span of bytes into the provided output buffer.
+     * @param out The span where the read bytes will be stored.
+     */
     void read(std::span<uint8_t> out) {
       if (not backend_.has(out.size())) {
         raise(DecodeError::NOT_ENOUGH_DATA);
@@ -113,154 +135,7 @@ namespace scale {
     }
 
    private:
-    BackendType backend_;
+    BackendType backend_; ///< Backend instance used for decoding.
   };
-
-
-  void decode(std::vector<bool> &collection, ScaleDecoder auto &decoder) {
-    size_t item_count;
-    decode(as_compact(item_count), decoder);
-    if (item_count > collection.max_size()) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    try {
-      collection.resize(item_count);
-    } catch (const std::bad_alloc &) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    for (size_t i = 0u; i < item_count; ++i) {
-      bool item;
-      decode(item, decoder);
-      collection[i] = item;
-    }
-  }
-
-  void decode(BitVec &v, ScaleDecoder auto &decoder) {
-    size_t size;
-    decode(as_compact(size), decoder);
-    if (not decoder.has((size + 7) / 8)) {
-      raise(DecodeError::NOT_ENOUGH_DATA);
-    }
-    v.bits.resize(size);
-    size_t i = 0;
-    uint8_t byte = 0;
-    for (std::vector<bool>::reference bit : v.bits) {
-      if (i % 8 == 0) {
-        byte = decoder.take();
-      }
-      bit.operator=(((byte >> (i % 8)) & 1) != 0);
-      ++i;
-    }
-  }
-
-  /// @note Implementation prohibited as potentially dangerous.
-  /// Use manual decoding instead
-  void decode(DynamicSpan auto &collection,
-              ScaleDecoder auto &decoder) = delete;
-
-  void decode(StaticCollection auto &collection, ScaleDecoder auto &decoder)
-    requires(not Decomposable<decltype(collection)>)
-            and (not qtils::is_tagged_v<decltype(collection)>)
-  {
-    for (auto &item : collection) {
-      decode(item, decoder);
-    }
-  }
-
-  void decode(ExtensibleBackCollection auto &collection,
-              ScaleDecoder auto &decoder)
-    requires(not qtils::is_tagged_v<decltype(collection)>)
-  {
-    using size_type = typename std::decay_t<decltype(collection)>::size_type;
-
-    size_t item_count;
-    decode(as_compact(item_count), decoder);
-    if (item_count > collection.max_size()) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    collection.clear();
-    try {
-      collection.reserve(item_count);
-    } catch (const std::bad_alloc &) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    for (size_type i = 0u; i < item_count; ++i) {
-      collection.emplace_back();
-      decode(collection.back(), decoder);
-    }
-  }
-
-  void decode(ResizeableCollection auto &collection, ScaleDecoder auto &decoder)
-    requires NoTagged<decltype(collection)>
-  {
-    size_t item_count;
-    decode(as_compact(item_count), decoder);
-    if (item_count > collection.max_size()) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    try {
-      collection.resize(item_count);
-    } catch (const std::bad_alloc &) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    for (auto &item : collection) {
-      decode(item, decoder);
-    }
-  }
-
-  /**
-   * @brief scale-decodes to non-sequential collection (which can not be
-   * reserved space or resize, but each element can be emplaced while
-   * decoding)
-   */
-  void decode(RandomExtensibleCollection auto &collection,
-              ScaleDecoder auto &decoder)
-    requires(not qtils::is_tagged_v<decltype(collection)>)
-  {
-    using size_type = typename std::decay_t<decltype(collection)>::size_type;
-    using value_type = typename std::decay_t<decltype(collection)>::value_type;
-
-    size_type item_count;
-    decode(as_compact(item_count), decoder);
-    if (item_count > collection.max_size()) {
-      raise(DecodeError::TOO_MANY_ITEMS);
-    }
-
-    collection.clear();
-    for (size_type i = 0u; i < item_count; ++i) {
-      value_type item;
-      decode(item, decoder);
-      try {
-        collection.emplace(std::move(item));
-      } catch (const std::bad_alloc &) {
-        raise(DecodeError::TOO_MANY_ITEMS);
-      }
-    }
-  }
-
-
-  using detail::decompose_and_apply;
-
-  void decode(Decomposable auto &decomposable, ScaleDecoder auto &decoder)
-    requires NoTagged<decltype(decomposable)>
-  {
-    return decompose_and_apply(decomposable, [&](auto &...args) {
-      (decode(const_cast<std::remove_cvref_t<decltype(args)> &>(args), decoder),
-       ...);
-    });
-  }
-
-
-  void decode(qtils::is_tagged_v auto &tagged, ScaleDecoder auto &decoder)
-    requires(not CompactInteger<decltype(tagged)>)
-  {
-    decode(untagged(tagged), decoder);
-  }
 
 }  // namespace scale

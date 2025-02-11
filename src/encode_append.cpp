@@ -7,11 +7,7 @@
 #include <scale/encode_append.hpp>
 #include <scale/scale.hpp>
 
-#ifdef JAM_COMPATIBILITY_ENABLED
-#include <scale/detail/jam_compact_integer.hpp>
-#else
 #include <scale/detail/compact_integer.hpp>
-#endif
 
 namespace scale {
 

@@ -6,8 +6,6 @@
 #pragma once
 
 #include <scale/definitions.hpp>
-#include <scale/detail/custom_decomposing.hpp>
-#include <scale/types.hpp>
 
 namespace scale::detail {
 
@@ -25,25 +23,5 @@ namespace scale::detail {
     }
     // clang-format on
   }
-
-  template <typename F>
-  decltype(auto) decompose_and_apply(DecomposableStructurallyBindable auto &&v,
-                                     const F &f) {
-    return decompose_and_apply<structured_binding_size_v<decltype(v)>>(
-        std::forward<decltype(v)>(v), f);
-  }
-
-  template <typename F>
-  decltype(auto) decompose_and_apply(DecomposableAggregate auto &&v, const F &f) {
-    return decompose_and_apply<field_number_of<decltype(v)>>(
-        std::forward<decltype(v)>(v), f);
-  }
-
-  template <typename F>
-  decltype(auto) decompose_and_apply(DecomposableArray auto &&v, const F &f) {
-    return decompose_and_apply<array_size<decltype(v)>>(
-        std::forward<decltype(v)>(v), f);
-  }
-
 
 }  // namespace scale::detail

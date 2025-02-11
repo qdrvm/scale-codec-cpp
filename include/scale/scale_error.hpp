@@ -1,7 +1,16 @@
 /**
- * Copyright Quadrivium LLC
+* Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @brief This file defines error codes for encoding and decoding operations
+ * in the SCALE serialization format.
+ *
+ * SCALE (Simple Concatenated Aggregate Little-Endian) is a lightweight
+ * serialization format commonly used in blockchain applications. This header
+ * provides error handling mechanisms for encoding and decoding operations.
  */
 
 #pragma once
@@ -11,28 +20,27 @@
 namespace scale {
 
   /**
-   * @brief EncodeError enum provides error codes for Encode methods
+   * @enum EncodeError
+   * @brief Provides error codes for encoding methods in SCALE serialization.
    */
   enum class EncodeError {
-    /// negative integers is not supported
-    NEGATIVE_INTEGER,
-    /// dereferencing a null pointer
-    DEREF_NULLPOINTER,
-    /// value too bit for compact representation
-    VALUE_TOO_BIG_FOR_COMPACT_REPRESENTATION,
+    NEGATIVE_INTEGER,  ///< Encoding of negative integers is not supported.
+    DEREF_NULLPOINTER, ///< Attempt to dereference a null pointer.
+    VALUE_TOO_BIG_FOR_COMPACT_REPRESENTATION ///< Value is too large for compact representation.
   };
 
   /**
-   * @brief DecoderError enum provides codes of errors for Decoder methods
+   * @enum DecodeError
+   * @brief Provides error codes for decoding methods in SCALE serialization.
    */
   enum class DecodeError {
-    NOT_ENOUGH_DATA = 1,  ///< not enough data to decode value
-    UNEXPECTED_VALUE,     ///< unexpected value
-    TOO_MANY_ITEMS,       ///< too many items, cannot address them in memory
-    WRONG_TYPE_INDEX,     ///< wrong type index, cannot decode variant
-    INVALID_ENUM_VALUE,   ///< enum value which doesn't belong to the enum
-    REDUNDANT_COMPACT_ENCODING,      ///< redundant bytes in compact encoding
-    DECODED_VALUE_OVERFLOWS_TARGET,  ///< encoded value overflows target type
+    NOT_ENOUGH_DATA = 1,  ///< Not enough data to decode value.
+    UNEXPECTED_VALUE,     ///< Unexpected value encountered during decoding.
+    TOO_MANY_ITEMS,       ///< Too many items, cannot address them in memory.
+    WRONG_TYPE_INDEX,     ///< Incorrect type index, cannot decode variant.
+    INVALID_ENUM_VALUE,   ///< Enum value does not belong to the expected enum.
+    REDUNDANT_COMPACT_ENCODING,      ///< Redundant bytes found in compact encoding.
+    DECODED_VALUE_OVERFLOWS_TARGET   ///< Decoded value overflows the target type.
   };
 
 }  // namespace scale

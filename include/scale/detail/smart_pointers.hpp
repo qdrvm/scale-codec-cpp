@@ -34,8 +34,6 @@
 
 namespace scale {
 
-  namespace detail {}
-
   /**
    * @brief Encodes a shared pointer if it is non-null.
    * @tparam T The type of the shared pointer.

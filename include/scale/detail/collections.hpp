@@ -1,0 +1,172 @@
+/**
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#pragma once
+
+#include <scale/detail/collections_type_traits.hpp>
+#include <scale/detail/decomposable_type_traits.hpp>
+
+namespace scale {
+
+  using detail::collections::DynamicCollection;
+  using detail::collections::DynamicSpan;
+  using detail::collections::ExtensibleBackCollection;
+  using detail::collections::RandomExtensibleCollection;
+  using detail::collections::ResizeableCollection;
+  using detail::collections::StaticCollection;
+  using detail::decomposable::Decomposable;
+  using detail::decomposable::DecomposableArray;
+
+  void encode(DynamicCollection auto &&collection, ScaleEncoder auto &encoder)
+    requires NoTagged<decltype(collection)>
+             and (not std::same_as<std::remove_cvref_t<decltype(collection)>,
+                                   std::vector<bool>>)
+  // and (not Decomposable<std::remove_cvref_t<decltype(collection)>>)
+  {
+    encode(as_compact(collection.size()), encoder);
+    for (auto &&item : std::forward<decltype(collection)>(collection)) {
+      encode(item, encoder);
+    }
+  }
+
+  void encode(StaticCollection auto &&collection, ScaleEncoder auto &encoder)
+    requires NoTagged<decltype(collection)>
+             and (not DecomposableArray<decltype(collection)>)
+  {
+    for (auto &&item : std::forward<decltype(collection)>(collection)) {
+      encode(item, encoder);
+    }
+  }
+
+  void encode(const std::string_view view, ScaleEncoder auto &encoder)
+    requires NoTagged<decltype(view)>
+  {
+    encode(as_compact(view.size()), encoder);
+    encoder.write(
+        {reinterpret_cast<const uint8_t *>(view.data()), view.size()});
+  }
+
+  template <typename T>
+    requires std::same_as<std::remove_cvref_t<T>, std::vector<bool>>
+  void encode(T &&vector, ScaleEncoder auto &encoder)
+    requires NoTagged<decltype(vector)>
+  {
+    encode(as_compact(vector.size()), encoder);
+    for (const bool item : vector) {
+      encoder.put(static_cast<uint8_t>(item ? 1 : 0));
+    }
+  }
+
+  /// @note Implementation prohibited as potentially dangerous.
+  /// Use manual decoding instead
+  void decode(DynamicSpan auto &collection,
+              ScaleDecoder auto &decoder) = delete;
+
+  void decode(StaticCollection auto &collection, ScaleDecoder auto &decoder)
+    requires NoTagged<decltype(collection)>
+             and (not Decomposable<decltype(collection)>)
+  {
+    for (auto &item : collection) {
+      decode(item, decoder);
+    }
+  }
+
+  void decode(ExtensibleBackCollection auto &collection,
+              ScaleDecoder auto &decoder)
+    requires NoTagged<decltype(collection)>
+  {
+    using size_type = typename std::decay_t<decltype(collection)>::size_type;
+
+    size_t item_count;
+    decode(as_compact(item_count), decoder);
+    if (item_count > collection.max_size()) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    collection.clear();
+    try {
+      collection.reserve(item_count);
+    } catch (const std::bad_alloc &) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    for (size_type i = 0u; i < item_count; ++i) {
+      collection.emplace_back();
+      decode(collection.back(), decoder);
+    }
+  }
+
+  void decode(ResizeableCollection auto &collection, ScaleDecoder auto &decoder)
+    requires NoTagged<decltype(collection)>
+  {
+    size_t item_count;
+    decode(as_compact(item_count), decoder);
+    if (item_count > collection.max_size()) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    try {
+      collection.resize(item_count);
+    } catch (const std::bad_alloc &) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    for (auto &item : collection) {
+      decode(item, decoder);
+    }
+  }
+
+  /**
+   * @brief scale-decodes to non-sequential collection (which can not be
+   * reserved space or resize, but each element can be emplaced while
+   * decoding)
+   */
+  void decode(RandomExtensibleCollection auto &collection,
+              ScaleDecoder auto &decoder)
+    requires NoTagged<decltype(collection)>
+  {
+    using size_type = typename std::decay_t<decltype(collection)>::size_type;
+    using value_type = typename std::decay_t<decltype(collection)>::value_type;
+
+    size_type item_count;
+    decode(as_compact(item_count), decoder);
+    if (item_count > collection.max_size()) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    collection.clear();
+    for (size_type i = 0u; i < item_count; ++i) {
+      value_type item;
+      decode(item, decoder);
+      try {
+        collection.emplace(std::move(item));
+      } catch (const std::bad_alloc &) {
+        raise(DecodeError::TOO_MANY_ITEMS);
+      }
+    }
+  }
+
+  void decode(std::vector<bool> &collection, ScaleDecoder auto &decoder) {
+    size_t item_count;
+    decode(as_compact(item_count), decoder);
+    if (item_count > collection.max_size()) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    try {
+      collection.resize(item_count);
+    } catch (const std::bad_alloc &) {
+      raise(DecodeError::TOO_MANY_ITEMS);
+    }
+
+    for (size_t i = 0u; i < item_count; ++i) {
+      bool item;
+      decode(item, decoder);
+      collection[i] = item;
+    }
+  }
+
+}  // namespace scale

@@ -7,6 +7,9 @@
 /**
  * @brief Provides utilities for handling std::variant and boost::variant
  *        in SCALE encoding/decoding.
+ *
+ * This file defines utilities to work with `std::variant` and `boost::variant`,
+ * allowing efficient encoding and decoding using SCALE serialization.
  */
 
 #pragma once
@@ -175,6 +178,8 @@ namespace scale {
 
   /**
    * @brief Encodes a variant using SCALE encoding.
+   * @param variant The variant to encode.
+   * @param encoder The encoder to use.
    */
   void encode(const Variant auto &variant, ScaleEncoder auto &encoder) {
     encode<0>(variant, encoder);
@@ -209,6 +214,8 @@ namespace scale {
 
   /**
    * @brief Decodes a variant using SCALE decoding.
+   * @param variant The variant to decode.
+   * @param decoder The decoder to use.
    */
   void decode(Variant auto &variant, ScaleDecoder auto &decoder) {
     using T = decltype(variant);
@@ -218,5 +225,4 @@ namespace scale {
     }
     raise(DecodeError::WRONG_TYPE_INDEX);
   }
-
 }  // namespace scale

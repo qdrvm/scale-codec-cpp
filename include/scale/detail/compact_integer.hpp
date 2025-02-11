@@ -10,8 +10,6 @@
 #include <qtils/tagged.hpp>
 
 #include <scale/definitions.hpp>
-#include <scale/outcome/outcome_throw.hpp>
-#include <scale/scale_error.hpp>
 #include <scale/types.hpp>
 
 namespace scale {
@@ -113,7 +111,7 @@ namespace scale {
 }  // namespace scale
 
 #ifdef JAM_COMPATIBILITY_ENABLED
-#include <scale/detail/jam_compact_integer.hpp>
+#include <scale/detail/compact_integer_jam.hpp>
 #else
-#include <scale/detail/classic_compact_integer.hpp>
+#include <scale/detail/compact_integer_classic.hpp>
 #endif

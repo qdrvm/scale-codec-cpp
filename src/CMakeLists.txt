@@ -11,13 +11,11 @@ add_custom_command(
 )
 
 add_library(scale
-    encode_append.cpp
     encoder.cpp
     decoder.cpp
     scale_error.cpp
     ${DECOMPOSE_AND_APPLY_HPP}
     )
-
 target_include_directories(scale PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
@@ -26,3 +24,10 @@ target_include_directories(scale PUBLIC
 target_link_libraries(scale
     Boost::boost
     )
+
+add_library(scale_append
+    encode_append.cpp
+)
+target_link_libraries(scale_append
+    scale
+)
