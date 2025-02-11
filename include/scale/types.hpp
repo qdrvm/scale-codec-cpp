@@ -25,10 +25,6 @@
 
 namespace scale {
 
-  /// @brief Concept that ensures a type is not tagged.
-  template <typename T>
-  concept NoTagged = not qtils::is_tagged_v<T>;
-
   // Encoding components
 
   /**
