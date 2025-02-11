@@ -33,7 +33,7 @@
     return std::forward<decltype(f)>(f)(__VA_ARGS__);                          \
   }                                                                            \
   template <typename F, typename V>                                            \
-    requires std::is_same_v<std::remove_cvref_t<V>, Self>                      \
+    requires std::derived_from<std::remove_cvref_t<V>, Self>                   \
   friend decltype(auto) decompose_and_apply(V &&v, F &&f) {                    \
     return std::forward<V>(v)._custom_decompose_and_apply(std::forward<F>(f)); \
   }
