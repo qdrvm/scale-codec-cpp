@@ -13,10 +13,8 @@
 #ifdef HAS_BOOST_VARIANT
 
 using scale::ByteArray;
-using scale::decode;
-using scale::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 using Testee = boost::variant<uint8_t, uint32_t>;
 
