@@ -114,7 +114,6 @@ namespace scale {
             ref(temp_storage.has_value() ? temp_storage.value() : value) {}
 
       template <typename U>
-        requires CompactCompatible<std::remove_cvref_t<U>>
       friend decltype(auto) as_compact(U &&value);
 
      public:
@@ -157,7 +156,6 @@ namespace scale {
      * @return CompactReflection instance.
      */
     template <typename T>
-      requires CompactCompatible<std::remove_cvref_t<T>>
     decltype(auto) as_compact(T &&value) {
       return CompactReflection<decltype(value)>(
           std::forward<decltype(value)>(value));

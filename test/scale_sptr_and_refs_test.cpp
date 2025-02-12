@@ -24,7 +24,7 @@ struct X {
 };
 
 TEST(SmartPointersAndRef, SharedPointer_SuccessEncode) {
-  std::shared_ptr<X> value = std::make_shared<X>(0xde, 0xad, 0xbe, 0xef);
+  std::shared_ptr<X> value = std::make_shared<X>(X{0xde, 0xad, 0xbe, 0xef});
   ByteArray expected = {0xde, 0xad, 0xbe, 0xef};
 
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
@@ -47,7 +47,7 @@ TEST(SmartPointersAndRef, SharedPointer_SuccessDecode) {
 }
 
 TEST(SmartPointersAndRef, UniquePointer_SuccessEncode) {
-  std::unique_ptr<X> value = std::make_unique<X>(0xde, 0xad, 0xbe, 0xef);
+  std::unique_ptr<X> value = std::make_unique<X>(X{0xde, 0xad, 0xbe, 0xef});
   ByteArray expected = {0xde, 0xad, 0xbe, 0xef};
 
   ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
