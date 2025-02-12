@@ -30,12 +30,14 @@ namespace scale {
     auto new_len = len + 1;
 #ifdef JAM_COMPATIBILITY_ENABLED
     auto encoded_len = detail::lengthOfEncodedJamCompactInteger(untagged(len));
-    auto encoded_new_len = detail::lengthOfEncodedJamCompactInteger(new_len);
+    auto encoded_new_len =
+        detail::lengthOfEncodedJamCompactInteger(untagged(new_len));
 #else
     auto encoded_len = detail::lengthOfEncodedCompactInteger(untagged(len));
-    auto encoded_new_len = detail::lengthOfEncodedCompactInteger(new_len);
+    auto encoded_new_len =
+        detail::lengthOfEncodedCompactInteger(untagged(new_len));
 #endif
-    return std::make_tuple(new_len, encoded_len, encoded_new_len);
+    return std::make_tuple(untagged(new_len), encoded_len, encoded_new_len);
   }
 
   outcome::result<void> append_or_new_vec(std::vector<uint8_t> &self_encoded,

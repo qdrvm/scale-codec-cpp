@@ -126,6 +126,7 @@ INSTANTIATE_TEST_SUITE_P(
         // 13: max multibyte integer:  2^536 - 1
         CompactTest::pair(BIGGEST_INT_FOR_COMPACT_REPRESENTATION,
                           std::vector<uint8_t>(68, 0xFF))));
+// clang-format on
 
 #endif
 
@@ -154,6 +155,22 @@ TEST(ScaleCompactTest, compactDecodeBigIntegerError) {
   auto bytes = ByteArray{0xff, 0xff, 0xff, 0xff};
   ASSERT_OUTCOME_ERROR(decode<Compact>(bytes),
                        scale::DecodeError::NOT_ENOUGH_DATA);
+}
+
+/**
+ * @given incorrect byte array, which assumes 4-th case of encoding
+ * @when apply decodeInteger
+ * @then get kNotEnoughData error
+ */
+TEST(ScaleCompactTest, asCompact) {
+  using T = uint32_t;
+  scale::ScaleEncoderStream encoder;
+  T original = 1234;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(scale::as_compact(original)));
+  ScaleDecoderStream decoder{encoded};
+  T decoded = 0;
+  decoder >> scale::as_compact(decoded);
+  ASSERT_EQ(decoded, original);
 }
 
 /**
@@ -189,8 +206,8 @@ INSTANTIATE_TEST_SUITE_P(
   /* 12 */ ByteArray{0b11111110, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000},
   /* 13 */ ByteArray{0b11111110, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b00000000},
   /* 14 */ ByteArray{0b11111111, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000},
-  /* 15 */ ByteArray{0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b00000000}
-     // // clang-format on
+  /* 15 */ ByteArray{0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b11111111, 0b00000000},
+        // clang-format on
         ));
 
 #else
@@ -204,4 +221,3 @@ INSTANTIATE_TEST_SUITE_P(
                       ByteArray{0b000001'11, 0, 0, 0, 0b01'000000, 0}));
 
 #endif
-
