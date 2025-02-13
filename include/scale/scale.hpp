@@ -39,7 +39,7 @@
 
 namespace scale {
   template <typename T>
-  void decode(T value, ScaleDecoder auto &decoder) {
+  void decode(T &&value, ScaleDecoder auto &decoder) {
     decode(value, decoder);
   }
 }  // namespace scale
