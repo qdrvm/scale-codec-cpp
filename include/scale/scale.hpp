@@ -5,8 +5,9 @@
  */
 
 /**
+ * @file scale.hpp
  * @brief Combines all headers to use existing or build custom SCALE
- * serialization and deserialization mechanisms
+ * serialization and deserialization mechanisms.
  */
 
 #pragma once
@@ -30,17 +31,35 @@
 #include <scale/detail/tagged.hpp>
 #include <scale/detail/variant.hpp>
 
-/**
- * @brief Provides implementations for SCALE encoding and decoding.
- *
- * This file defines the memory-based SCALE serialization and deserialization
- * mechanisms using the Outcome result type to handle errors gracefully.
- */
-
 namespace scale {
+
+  namespace detail {
+    /**
+     * @brief Concept to check if a type supports lvalue decoding.
+     *
+     * @tparam T The type being checked.
+     * @tparam D The decoder type.
+     */
+    template <typename T, typename D>
+    concept HasLValueDecode = requires(T value, D &decoder) {
+      { decode(value, decoder) };
+    };
+  }  // namespace detail
+
+  /**
+   * @brief Decodes a value using SCALE decoding.
+   *
+   * @tparam T The type of the value to decode.
+   * @tparam decoder The decoder used for decoding.
+   * @param value The rvalue reference to the value being decoded.
+   */
   template <typename T>
-  void decode(T &&value, ScaleDecoder auto &decoder) {
-    decode(value, decoder);
+  void decode(T &&value, ScaleDecoder auto &decoder)
+    requires std::is_rvalue_reference_v<decltype(value)>
+             and detail::HasLValueDecode<std::remove_reference_t<T>,
+                                         decltype(decoder)>
+  {
+    decode(static_cast<std::remove_reference_t<T> &>(value), decoder);
   }
 }  // namespace scale
 

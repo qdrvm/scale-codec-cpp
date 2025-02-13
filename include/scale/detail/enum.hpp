@@ -176,7 +176,7 @@ namespace scale {
  */
 #define SCALE_DEFINE_ENUM_VALUE_LIST(enum_namespace, enum_name, ...) \
   template <>                                                        \
-  struct ::scale::enum_traits<enum_namespace::enum_name> final {       \
+  struct scale::enum_traits<enum_namespace::enum_name> final {       \
     static constexpr bool is_default = false;                        \
     static constexpr std::array valid_values = {__VA_ARGS__};        \
   };
