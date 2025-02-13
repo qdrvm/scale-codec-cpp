@@ -161,7 +161,7 @@ namespace scale {
  */
 #define SCALE_DEFINE_ENUM_VALUE_RANGE(enum_namespace, enum_name, min, max)  \
   template <>                                                               \
-  struct scale::enum_traits<enum_namespace::enum_name> final {              \
+  struct ::scale::enum_traits<enum_namespace::enum_name> final {              \
     using underlying = std::underlying_type_t<enum_namespace::enum_name>;   \
     static constexpr underlying min_value = static_cast<underlying>((min)); \
     static constexpr underlying max_value = static_cast<underlying>((max)); \
@@ -175,7 +175,7 @@ namespace scale {
  */
 #define SCALE_DEFINE_ENUM_VALUE_LIST(enum_namespace, enum_name, ...) \
   template <>                                                        \
-  struct scale::enum_traits<enum_namespace::enum_name> final {       \
+  struct ::scale::enum_traits<enum_namespace::enum_name> final {       \
     static constexpr bool is_default = false;                        \
     static constexpr std::array valid_values = {__VA_ARGS__};        \
   };

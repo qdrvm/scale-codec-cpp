@@ -37,6 +37,14 @@
  * mechanisms using the Outcome result type to handle errors gracefully.
  */
 
+namespace scale {
+  template <typename T>
+    requires std::is_rvalue_reference_v<T>
+  void decode(T value, ScaleDecoder auto &decoder) {
+    decode(value, decoder);
+  }
+}  // namespace scale
+
 namespace scale::impl {
 
   /**
