@@ -47,7 +47,7 @@ namespace scale {
      * @param bit_vector The bit vector to encode.
      * @param encoder The encoder instance to write into.
      */
-    friend void encode(const BitVec &bit_vector, ScaleEncoder auto &encoder) {
+    friend void encode(const BitVec &bit_vector, Encoder &encoder) {
       encode(as_compact(bit_vector.bits.size()), encoder);
       size_t i = 0;
       uint8_t byte = 0;
@@ -72,7 +72,7 @@ namespace scale {
      * @param decoder The decoder instance to read from.
      * @throws DecodeError::NOT_ENOUGH_DATA If there is insufficient data.
      */
-    friend void decode(BitVec &v, ScaleDecoder auto &decoder) {
+    friend void decode(BitVec &v, Decoder &decoder) {
       size_t size;
       decode(as_compact(size), decoder);
       if (not decoder.has((size + 7) / 8)) {

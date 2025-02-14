@@ -103,9 +103,7 @@ namespace scale {
    * @param boolean Boolean value to encode.
    * @param encoder SCALE encoder.
    */
-  void encode(bool boolean, ScaleEncoder auto &encoder)
-    requires NoTagged<decltype(boolean)>
-  {
+  inline void encode(bool boolean, Encoder &encoder) {
     encoder.put(boolean ? 1u : 0u);
   }
 
@@ -114,7 +112,7 @@ namespace scale {
    * @param boolean Boolean value to decode.
    * @param decoder SCALE decoder.
    */
-  void decode(bool &boolean, ScaleDecoder auto &decoder) {
+  inline void decode(bool &boolean, Decoder &decoder) {
     switch (auto byte = decoder.take()) {
       case 0u:
         boolean = false;
@@ -132,7 +130,7 @@ namespace scale {
    * @param integer Integer value to encode.
    * @param encoder SCALE encoder.
    */
-  void encode(const SmallInteger auto &integer, ScaleEncoder auto &encoder)
+  void encode(const SmallInteger auto &integer, Encoder &encoder)
     requires NoTagged<decltype(integer)>
   {
     using Integer = std::remove_cvref_t<decltype(integer)>;
@@ -152,7 +150,7 @@ namespace scale {
    * @param integer Big integer to encode.
    * @param encoder SCALE encoder.
    */
-  void encode(BigInteger auto &&integer, ScaleEncoder auto &encoder)
+  void encode(BigInteger auto &&integer, Encoder &encoder)
     requires NoTagged<decltype(integer)>
   {
     constexpr auto size =
@@ -168,7 +166,7 @@ namespace scale {
    * @param integer Small integer to decode.
    * @param decoder SCALE decoder.
    */
-  void decode(SmallInteger auto &integer, ScaleDecoder auto &decoder) {
+  void decode(SmallInteger auto &integer, Decoder &decoder) {
     using Integer = std::remove_cvref_t<decltype(integer)>;
     if constexpr (sizeof(Integer) == 1u) {
       integer = decoder.take();
@@ -190,7 +188,7 @@ namespace scale {
    * @param integer Big integer to decode.
    * @param decoder SCALE decoder.
    */
-  void decode(BigInteger auto &integer, ScaleDecoder auto &decoder) {
+  void decode(BigInteger auto &integer, Decoder &decoder) {
     constexpr auto size =
         (std::numeric_limits<std::decay_t<decltype(integer)>>::digits + 1) / 8;
     std::array<uint8_t, size> buff{};

@@ -52,7 +52,7 @@ namespace scale {
    * @param integer Integer value to encode.
    * @param encoder SCALE encoder.
    */
-  void encode(CompactInteger auto &&integer, ScaleEncoder auto &encoder) {
+  void encode(CompactInteger auto &&integer, Encoder &encoder) {
     using underlying_type =
         qtils::untagged_t<std::remove_cvref_t<decltype(integer)>>;
 
@@ -99,7 +99,7 @@ namespace scale {
    * @param integer The output integer.
    * @param decoder SCALE decoder.
    */
-  void decode(CompactInteger auto &integer, ScaleDecoder auto &decoder) {
+  void decode(CompactInteger auto &integer, Decoder &decoder) {
     using underlying_type =
         qtils::untagged_t<std::remove_cvref_t<decltype(integer)>>;
 

@@ -46,7 +46,7 @@ namespace scale {
     /// @brief Default constructor.
     Configurable() = default;
     /// @brief Default destructor.
-    ~Configurable() = default;
+    virtual ~Configurable() = default;
 
 #ifdef CUSTOM_CONFIG_ENABLED
     /**

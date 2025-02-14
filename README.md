@@ -40,15 +40,9 @@ class Decoder is in charge of decoding data
 It initializes provided value over `decode()` function by decoded value from encoded source data
 Additionally it initialize provided values over `>>` operator.
 
-## ScaleEncoder
-concept ScaleEncoder covers any implementation of Encoder (differing by EncoderBackend type)
-
-## ScaleDecoder
-concept ScaleDecoder covers any implementation of Decoder (differing by DecoderBackend type)
-
 ## Example 
 ```c++
-Encoder<ToBytes> encoder; // Encoder is used backend 'to bytes'
+ToBytes encoder; // Encoder which used backend 'to bytes'
 
 uint32_t ui32 = 123u;
 uint8_t ui8 = 234u;
@@ -85,7 +79,7 @@ ByteArray data = encoder.backend().to_vector();
 ```
 Now you can decode that data back:
 ```c++
-Decoder<FromBytes> decoder(data); // Decoder is used backend 'from bytes'
+FromBytes decoder(data); // Decoder which used backend 'from bytes'
 
 uint32_t ui32 = 0u;
 uint8_t ui8 = 0u;
@@ -122,11 +116,11 @@ struct MyType {
     int a = 0;
     std::string b;
     
-    friend void encode(const MyType &v, ScaleEncoder auto &encoder) {
+    friend void encode(const MyType &v, Encoder &encoder) {
       encoder << a;
       encode(b, encoder);
     }
-    friend void decode(MyType &v, ScaleDecoder auto &decoder) {
+    friend void decode(MyType &v, Decoder &decoder) {
       decoder >> a;
       decode(b, decoder);
     }
@@ -142,7 +136,7 @@ try {
 }
 ByteArray data = encoder.backend().to_vector();
 
-Decoder<FromBytes> decoder(data);
+FromBytes decoder(data);
 std::vector<MyType> dst_vec;
 try {
   decode(dst, decoder);
@@ -175,22 +169,20 @@ if (res.has_value()) {
   SomeClass object = std::move(res.value()); // Decoded value
 }
 
-// using Encoder = ::scale::Encoder<::scale::backend::ToBytes>;
-using ::scale::impl::bytes::Encoder;
+using ::scale::impl::bytes::EncoderToBytes;
 
 SomeClass object = {...};
-Encoder encoder;
+EncoderToBytes encoder;
 try {
     encoder << object;
     // or encode(object, decoder);
     std::vector<uint8_t> encoded = std::move(res.value())
 } catch ...
 
-// using Decoder = ::scale::Decoder<::scale::backend::FromBytes>;
-using ::scale::impl::bytes::Decoder;
+using ::scale::impl::bytes::DecoderFromBytes;
 
 BytesArray data = {...};
-Decoder decoder(data);
+DecoderFromBytes decoder(data);
 try {
     Object object;
     decoder >> object;

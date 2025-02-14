@@ -128,8 +128,7 @@ namespace scale {
        * @param value The CompactReflection instance.
        * @param encoder The encoder to use.
        */
-      friend void encode(const CompactReflection &value,
-                         ScaleEncoder auto &encoder) {
+      friend void encode(const CompactReflection &value, Encoder &encoder) {
         encode(Compact<std::remove_cvref_t<T>>(value.ref), encoder);
       }
 
@@ -138,7 +137,7 @@ namespace scale {
        * @param value The CompactReflection instance.
        * @param decoder The decoder to use.
        */
-      friend void decode(CompactReflection &value, ScaleDecoder auto &decoder) {
+      friend void decode(CompactReflection &value, Decoder &decoder) {
         Compact<std::remove_cvref_t<T>> tmp;
         decode(tmp, decoder);
         value.ref = untagged(tmp);

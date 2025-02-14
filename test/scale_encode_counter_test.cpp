@@ -9,12 +9,11 @@
 #include <qtils/test/outcome.hpp>
 #include <scale/scale.hpp>
 
-using scale::Encoder;
 using scale::backend::ForCount;
 
 template <typename T>
 outcome::result<size_t> encode(T &&value) {
-  Encoder<ForCount> encoder;
+  ForCount encoder;
   try {
     encode(std::forward<T>(value), encoder);
   } catch (std::system_error &e) {

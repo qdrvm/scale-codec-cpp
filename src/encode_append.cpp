@@ -36,9 +36,9 @@ namespace scale {
 
     // No data present, just encode the given input data.
     if (self_encoded.empty()) {
-      Encoder<backend::ToBytes> encoder;
+      backend::ToBytes encoder;
       encoder << std::vector{opaque_value};
-      self_encoded = encoder.backend().to_vector();
+      self_encoded = encoder.to_vector();
       return outcome::success();
     }
 

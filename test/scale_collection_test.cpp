@@ -19,8 +19,8 @@ using scale::CompactInteger;
 using scale::DecodeError;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using Encoder = scale::backend::ToBytes;
+using Decoder = scale::backend::FromBytes;
 
 /**
  * @given collection of 80 items of type uint8_t
@@ -496,7 +496,7 @@ TEST(CollectionTest, decodeToMutableCollection) {
     ASSERT_EQ(decoded, collection);
   }
   {
-    using TestCollection = std::list< uint16_t>;
+    using TestCollection = std::list<uint16_t>;
 
     TestCollection collection{1, 2, 3, 4, 5};
 
@@ -505,7 +505,7 @@ TEST(CollectionTest, decodeToMutableCollection) {
     ASSERT_EQ(decoded, collection);
   }
   {
-    using TestCollection = std::set< uint16_t>;
+    using TestCollection = std::set<uint16_t>;
 
     TestCollection collection{1, 2, 3, 4, 5};
 
@@ -514,7 +514,7 @@ TEST(CollectionTest, decodeToMutableCollection) {
     ASSERT_EQ(decoded, collection);
   }
   {
-    using TestCollection = std::map<uint16_t,  uint16_t>;
+    using TestCollection = std::map<uint16_t, uint16_t>;
 
     TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
 
@@ -523,7 +523,7 @@ TEST(CollectionTest, decodeToMutableCollection) {
     ASSERT_EQ(decoded, collection);
   }
   {
-    using TestCollection = std::unordered_map<uint16_t,  uint16_t>;
+    using TestCollection = std::unordered_map<uint16_t, uint16_t>;
 
     TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
 

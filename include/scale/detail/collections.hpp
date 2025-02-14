@@ -17,7 +17,9 @@
 
 #include <scale/detail/collections_type_traits.hpp>
 #include <scale/detail/decomposable_type_traits.hpp>
+#include <scale/detail/fixed_width_integer.hpp>
 #include <scale/detail/tagged.hpp>
+#include <scale/types.hpp>
 
 namespace scale {
 
@@ -35,7 +37,7 @@ namespace scale {
    * @param collection The collection to encode.
    * @param encoder The encoder instance to write to.
    */
-  void encode(DynamicCollection auto &&collection, ScaleEncoder auto &encoder)
+  void encode(DynamicCollection auto &&collection, Encoder &encoder)
     requires NoTagged<decltype(collection)>
              and (not std::same_as<std::remove_cvref_t<decltype(collection)>,
                                    std::vector<bool>>)
@@ -51,7 +53,7 @@ namespace scale {
    * @param collection The collection to encode.
    * @param encoder The encoder instance to write to.
    */
-  void encode(StaticCollection auto &&collection, ScaleEncoder auto &encoder)
+  void encode(StaticCollection auto &&collection, Encoder &encoder)
     requires NoTagged<decltype(collection)>
              and (not DecomposableArray<decltype(collection)>)
   {
@@ -65,9 +67,7 @@ namespace scale {
    * @param view The string view to encode.
    * @param encoder The encoder instance to write to.
    */
-  void encode(const std::string_view view, ScaleEncoder auto &encoder)
-    requires NoTagged<decltype(view)>
-  {
+  inline void encode(const std::string_view view, Encoder &encoder) {
     encode(as_compact(view.size()), encoder);
     encoder.write(
         {reinterpret_cast<const uint8_t *>(view.data()), view.size()});
@@ -80,7 +80,7 @@ namespace scale {
    */
   template <typename T>
     requires std::same_as<std::remove_cvref_t<T>, std::vector<bool>>
-  void encode(T &&vector, ScaleEncoder auto &encoder)
+  void encode(T &&vector, Encoder &encoder)
     requires NoTagged<decltype(vector)>
   {
     encode(as_compact(vector.size()), encoder);
@@ -92,15 +92,14 @@ namespace scale {
   /**
    * @brief Decoding for dynamic spans is prohibited as potentially dangerous.
    */
-  void decode(DynamicSpan auto &collection,
-              ScaleDecoder auto &decoder) = delete;
+  void decode(DynamicSpan auto &collection, Decoder &decoder) = delete;
 
   /**
    * @brief Decodes a static collection using SCALE decoding.
    * @param collection The collection to decode.
    * @param decoder The decoder instance to read from.
    */
-  void decode(StaticCollection auto &collection, ScaleDecoder auto &decoder)
+  void decode(StaticCollection auto &collection, Decoder &decoder)
     requires NoTagged<decltype(collection)>
              and (not Decomposable<decltype(collection)>)
   {
@@ -122,8 +121,7 @@ namespace scale {
    * @param collection The collection to decode.
    * @param decoder The decoder instance to read from.
    */
-  void decode(ExtensibleBackCollection auto &collection,
-              ScaleDecoder auto &decoder)
+  void decode(ExtensibleBackCollection auto &collection, Decoder &decoder)
     requires NoTagged<decltype(collection)>
   {
     using size_type = typename std::decay_t<decltype(collection)>::size_type;
@@ -152,7 +150,7 @@ namespace scale {
    * @param collection The collection to decode.
    * @param decoder The decoder instance to read from.
    */
-  void decode(ResizeableCollection auto &collection, ScaleDecoder auto &decoder)
+  void decode(ResizeableCollection auto &collection, Decoder &decoder)
     requires NoTagged<decltype(collection)>
   {
     using Collection = std::remove_cvref_t<decltype(collection)>;
@@ -186,8 +184,7 @@ namespace scale {
    * @note non-sequential collection, which can not be reserved space or resize,
    * but each element can be emplaced while decoding
    */
-  void decode(RandomExtensibleCollection auto &collection,
-              ScaleDecoder auto &decoder)
+  void decode(RandomExtensibleCollection auto &collection, Decoder &decoder)
     requires NoTagged<decltype(collection)>
   {
     using size_type = typename std::decay_t<decltype(collection)>::size_type;
@@ -217,7 +214,7 @@ namespace scale {
    * @param collection The collection to decode.
    * @param decoder The decoder instance to read from.
    */
-  void decode(std::vector<bool> &collection, ScaleDecoder auto &decoder) {
+  inline void decode(std::vector<bool> &collection, Decoder &decoder) {
     size_t item_count;
     decode(as_compact(item_count), decoder);
     if (item_count > collection.max_size()) {

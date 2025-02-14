@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <scale/encoder_backend.hpp>
+#include <scale/encoder.hpp>
 
 #include <deque>
 
@@ -25,8 +25,11 @@ namespace scale::backend {
    * @class ToBytes
    * @brief Encoder backend that accumulates bytes into a deque.
    */
-  class ToBytes final : public EncoderBackend {
+  class ToBytes final : public Encoder {
    public:
+    template <typename... Args>
+    ToBytes(Args &&...args) : Encoder(std::forward<Args>(args)...){};
+
     ToBytes() = default;
     ToBytes(ToBytes &&) noexcept = delete;
     ToBytes(const ToBytes &) = delete;

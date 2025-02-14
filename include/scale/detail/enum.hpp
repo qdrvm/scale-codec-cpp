@@ -124,7 +124,7 @@ namespace scale {
    * @param enumeration The enumeration value to encode.
    * @param encoder SCALE encoder.
    */
-  void encode(const Enumeration auto &enumeration, ScaleEncoder auto &encoder)
+  void encode(const Enumeration auto &enumeration, Encoder &encoder)
     requires NoTagged<decltype(enumeration)>
   {
     using T =
@@ -137,7 +137,7 @@ namespace scale {
    * @param v The enumeration value to decode into.
    * @param decoder SCALE decoder.
    */
-  void decode(Enumeration auto &v, ScaleDecoder auto &decoder)
+  void decode(Enumeration auto &v, Decoder &decoder)
     requires NoTagged<decltype(v)>
   {
     using E = std::decay_t<decltype(v)>;

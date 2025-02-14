@@ -40,7 +40,7 @@ namespace scale {
   template <typename T>
     requires qtils::is_tagged_v<T>
              and (not detail::compact_integer::CompactInteger<T>)
-  void encode(const T &tagged, ScaleEncoder auto &encoder) {
+  void encode(const T &tagged, Encoder &encoder) {
     return encode(untagged(tagged), encoder);
   }
 
@@ -54,7 +54,7 @@ namespace scale {
   template <typename T>
     requires qtils::is_tagged_v<T>
              and (not detail::compact_integer::CompactInteger<T>)
-  void decode(T &tagged, ScaleDecoder auto &decoder) {
+  void decode(T &tagged, Decoder &decoder) {
     return decode(untagged(tagged), decoder);
   }
 

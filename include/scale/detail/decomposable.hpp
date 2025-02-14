@@ -79,7 +79,7 @@ namespace scale {
    * @tparam decomposable The decomposable type to encode.
    * @param encoder The encoder instance to write to.
    */
-  void encode(Decomposable auto &&decomposable, ScaleEncoder auto &encoder)
+  void encode(Decomposable auto &&decomposable, Encoder &encoder)
     requires NoTagged<decltype(decomposable)>
   {
     decompose_and_apply(std::forward<decltype(decomposable)>(decomposable),
@@ -94,11 +94,15 @@ namespace scale {
    * @tparam decomposable The decomposable type to decode.
    * @param decoder The decoder instance to read from.
    */
-  void decode(Decomposable auto &decomposable, ScaleDecoder auto &decoder)
+  void decode(Decomposable auto &decomposable, Decoder &decoder)
     requires NoTagged<decltype(decomposable)>
   {
     return decompose_and_apply(decomposable, [&](auto &&...args) {
-        (decode(const_cast<std::remove_cv_t<std::remove_reference_t<decltype(args)>>&>(args), decoder), ...);
+      (decode(const_cast<
+                  std::remove_cv_t<std::remove_reference_t<decltype(args)>> &>(
+                  args),
+              decoder),
+       ...);
     });
   }
 

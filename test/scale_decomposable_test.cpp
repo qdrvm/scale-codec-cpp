@@ -19,8 +19,8 @@ using scale::CompactInteger;
 using scale::DecodeError;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::Encoder<scale::backend::ToBytes>;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using Encoder = scale::backend::ToBytes;
+using Decoder = scale::backend::FromBytes;
 
 TEST(Decomposable, C_Style_array) {
   using Testee = const uint16_t[3];

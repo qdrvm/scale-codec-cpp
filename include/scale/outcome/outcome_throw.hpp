@@ -1,5 +1,5 @@
 /**
-* Copyright Quadrivium LLC
+ * Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -19,7 +19,8 @@ namespace scale {
   /**
    * @brief Raises a system error exception using Boost.
    * @param ec The error code to throw as an exception.
-   * @throws std::system_error Always throws an exception with the given error code.
+   * @throws std::system_error Always throws an exception with the given error
+   * code.
    */
   [[noreturn]] inline void raise(const std::error_code &ec) {
     boost::throw_exception(std::system_error(ec));

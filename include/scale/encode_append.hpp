@@ -7,8 +7,7 @@
 #pragma once
 
 #include <qtils/outcome.hpp>
-#include <scale/encoder.hpp>
-#include <scale/types.hpp>
+#include <scale/scale.hpp>
 
 namespace scale {
 
@@ -18,17 +17,17 @@ namespace scale {
   struct EncodeOpaqueValue {
     ConstSpanOfBytes v;
 
-    friend void encode(EncodeOpaqueValue &&opaque, ScaleEncoder auto &encoder) {
+    friend void encode(EncodeOpaqueValue &&opaque, Encoder &encoder) {
       for (auto &item : opaque.v) {
         encode(item, encoder);
       }
     }
 
-    friend void decode(EncodeOpaqueValue &opaque, ScaleDecoder auto &decoder) {
-      for (auto &item : opaque.v) {
-        decode(item, decoder);
-      }
-    }
+    // friend void decode(EncodeOpaqueValue &opaque, Decoder &decoder) {
+    //   for (auto &item : opaque.v) {
+    //     decode(item, decoder);
+    //   }
+    // }
   };
 
   /**

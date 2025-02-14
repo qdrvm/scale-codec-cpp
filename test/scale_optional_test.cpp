@@ -13,7 +13,7 @@ using scale::DecodeError;
 using scale::EncodeError;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Decoder = scale::Decoder<scale::backend::FromBytes>;
+using Decoder = scale::backend::FromBytes;
 
 /**
  * @given variety of optional values

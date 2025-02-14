@@ -164,7 +164,7 @@ namespace scale {
    * @param encoder The encoder to use.
    */
   template <uint8_t I>
-  void encode(const Variant auto &variant, ScaleEncoder auto &encoder) {
+  void encode(const Variant auto &variant, Encoder &encoder) {
     using T = decltype(variant);
     if (variant_index(variant) == I) {
       encode(I, encoder);
@@ -181,7 +181,7 @@ namespace scale {
    * @param variant The variant to encode.
    * @param encoder The encoder to use.
    */
-  void encode(const Variant auto &variant, ScaleEncoder auto &encoder) {
+  void encode(const Variant auto &variant, Encoder &encoder) {
     encode<0>(variant, encoder);
   }
 
@@ -193,9 +193,7 @@ namespace scale {
    * @param index The index of the type to decode.
    */
   template <size_t I>
-  void decode(Variant auto &variant,
-              ScaleDecoder auto &decoder,
-              const size_t index)
+  void decode(Variant auto &variant, Decoder &decoder, const size_t index)
     requires(I < std::tuple_size_v<VariantTypes<decltype(variant)>>)
   {
     using T = decltype(variant);
@@ -217,7 +215,7 @@ namespace scale {
    * @param variant The variant to decode.
    * @param decoder The decoder to use.
    */
-  void decode(Variant auto &variant, ScaleDecoder auto &decoder) {
+  void decode(Variant auto &variant, Decoder &decoder) {
     using T = decltype(variant);
     uint8_t index = decoder.take();
     if (index < VariantSize<T>) {

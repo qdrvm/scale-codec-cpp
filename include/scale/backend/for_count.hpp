@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <scale/encoder_backend.hpp>
+#include <scale/encoder.hpp>
 
 namespace scale::backend {
 
@@ -23,7 +23,7 @@ namespace scale::backend {
    * @class ForCount
    * @brief Encoder backend that counts the number of bytes encoded.
    */
-  class ForCount final : public EncoderBackend {
+  class ForCount final : public Encoder {
    public:
     /**
      * @brief Default constructor.

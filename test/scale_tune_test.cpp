@@ -21,8 +21,6 @@ using scale::Compact;
 using scale::ConstSpanOfBytes;
 using scale::Decoder;
 using scale::Encoder;
-using scale::ScaleDecoder;
-using scale::ScaleEncoder;
 using scale::backend::FromBytes;
 using scale::backend::ToBytes;
 using scale::impl::memory::decode;
@@ -31,19 +29,19 @@ using scale::impl::memory::encode;
 template <typename T, typename... Configs>
 outcome::result<std::vector<uint8_t>> encode_with_config(T &&value,
                                                          Configs &&...configs) {
-  Encoder<ToBytes> encoder(std::forward<Configs>(configs)...);
+  ToBytes encoder(std::forward<Configs>(configs)...);
   try {
     encode(std::forward<T>(value), encoder);
   } catch (std::system_error &e) {
     return outcome::failure(e.code());
   }
-  return std::move(encoder).backend().to_vector();
+  return std::move(encoder).to_vector();
 }
 
 template <typename T, typename... Configs>
 outcome::result<T> decode_with_config(ConstSpanOfBytes bytes,
                                       Configs &&...configs) {
-  Decoder<FromBytes> decoder(bytes, std::forward<Configs>(configs)...);
+  FromBytes decoder(bytes, std::forward<Configs>(configs)...);
   T value;
   try {
     decode(value, decoder);
@@ -65,7 +63,7 @@ struct Object : private qtils::Empty {
 
   bool operator==(const Object &) const = default;
 
-  friend void encode(const Object &obj, ScaleEncoder auto &encoder) {
+  friend void encode(const Object &obj, Encoder &encoder) {
     auto mul = encoder.template getConfig<MulConfig>().multi;
     auto add = encoder.template getConfig<AddConfig>().add;
 
@@ -76,15 +74,14 @@ struct Object : private qtils::Empty {
     }
   }
 
-  friend void decode(Object &obj, ScaleDecoder auto &decoder) {
-    auto mul = decoder.template getConfig<MulConfig>().multi;
-    auto add = decoder.template getConfig<AddConfig>().add;
+  friend void decode(Object &obj, Decoder &decoder) {
+    auto mul = decoder. getConfig<MulConfig>().multi;
+    auto add = decoder.getConfig<AddConfig>().add;
     size_t size;
     decode(as_compact(size), decoder);
     obj.buff.resize(size);
     for (uint8_t &i : obj.buff) {
-      uint8_t x;
-      decoder >> x;
+      uint8_t x = decoder.take();
       i = (x - add) / mul;
     }
   }

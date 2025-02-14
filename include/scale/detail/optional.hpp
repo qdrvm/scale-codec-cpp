@@ -114,7 +114,7 @@ namespace scale {
    * @param opt_bool The `optional<bool>` to encode.
    * @param encoder The SCALE encoder.
    */
-  void encode(OptionalBool auto &&opt_bool, ScaleEncoder auto &encoder)
+  void encode(OptionalBool auto &&opt_bool, Encoder &encoder)
     requires NoTagged<decltype(opt_bool)>
   {
     if (opt_bool.has_value()) {
@@ -132,7 +132,7 @@ namespace scale {
    * @param optional The optional value to encode.
    * @param encoder The SCALE encoder.
    */
-  void encode(Optional auto &&optional, ScaleEncoder auto &encoder)
+  void encode(Optional auto &&optional, Encoder &encoder)
     requires NoTagged<decltype(optional)>
   {
     if (not optional.has_value()) {
@@ -143,7 +143,7 @@ namespace scale {
     }
   }
 
-  void encode(const std::nullopt_t &, ScaleEncoder auto &encoder) {
+  inline void encode(const std::nullopt_t &, Encoder &encoder) {
     encoder.put(0);
   }
 
@@ -153,7 +153,7 @@ namespace scale {
    * @param opt_bool The `optional<bool>` to decode.
    * @param decoder The SCALE decoder.
    */
-  void decode(OptionalBool auto &opt_bool, ScaleDecoder auto &decoder)
+  void decode(OptionalBool auto &opt_bool, Decoder &decoder)
     requires NoTagged<decltype(opt_bool)>
   {
     auto byte = decoder.take();
@@ -178,7 +178,7 @@ namespace scale {
    * @param optional The optional value to decode.
    * @param decoder The SCALE decoder.
    */
-  void decode(Optional auto &optional, ScaleDecoder auto &decoder)
+  void decode(Optional auto &optional, Decoder &decoder)
     requires NoTagged<decltype(optional)>
   {
     auto byte = decoder.take();

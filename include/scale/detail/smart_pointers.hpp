@@ -47,7 +47,7 @@ namespace scale {
    * @throws EncodeError::DEREF_NULLPOINTER if the pointer is null.
    */
   template <typename T>
-  void encode(const std::shared_ptr<T> &sptr, ScaleEncoder auto &encoder)
+  void encode(const std::shared_ptr<T> &sptr, Encoder &encoder)
     requires NoTagged<decltype(sptr)>
   {
     if (sptr) {
@@ -64,7 +64,7 @@ namespace scale {
    * @throws EncodeError::DEREF_NULLPOINTER if the pointer is null.
    */
   template <typename T>
-  void encode(const std::unique_ptr<T> &uptr, ScaleEncoder auto &encoder)
+  void encode(const std::unique_ptr<T> &uptr, Encoder &encoder)
     requires NoTagged<decltype(uptr)>
   {
     if (uptr) {
@@ -80,8 +80,7 @@ namespace scale {
    * @param encoder SCALE encoder.
    */
   template <typename T>
-  void encode(const std::reference_wrapper<T> &reference,
-              ScaleEncoder auto &encoder)
+  void encode(const std::reference_wrapper<T> &reference, Encoder &encoder)
     requires NoTagged<decltype(reference)>
   {
     encode(reference.get(), encoder);
@@ -95,7 +94,7 @@ namespace scale {
    */
   template <typename T>
     requires std::is_default_constructible_v<std::remove_const_t<T>>
-  void decode(std::shared_ptr<T> &v, ScaleDecoder auto &decoder) {
+  void decode(std::shared_ptr<T> &v, Decoder &decoder) {
     v = std::make_shared<std::remove_const_t<T>>();
     decode(const_cast<std::remove_const_t<T> &>(*v), decoder);
   }
@@ -108,7 +107,7 @@ namespace scale {
    */
   template <typename T>
     requires std::is_default_constructible_v<std::remove_const_t<T>>
-  void decode(std::unique_ptr<T> &v, ScaleDecoder auto &decoder) {
+  void decode(std::unique_ptr<T> &v, Decoder &decoder) {
     v = std::make_unique<std::remove_const_t<T>>();
     decode(const_cast<std::remove_const_t<T> &>(*v), decoder);
   }
@@ -121,7 +120,7 @@ namespace scale {
    * @param decoder SCALE decoder.
    */
   template <typename T>
-  void decode(std::reference_wrapper<T> &reference, ScaleDecoder auto &decoder)
+  void decode(std::reference_wrapper<T> &reference, Decoder &decoder)
     requires NoTagged<decltype(reference)>
   {
     decode(reference.get(), decoder);

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <scale/decoder_backend.hpp>
+#include <scale/decoder.hpp>
 
 namespace scale::backend {
 
@@ -22,13 +22,17 @@ namespace scale::backend {
    * @class FromBytes
    * @brief Decoder backend that processes bytes from a span buffer.
    */
-  class FromBytes final : public DecoderBackend {
+  class FromBytes final : public Decoder {
    public:
     /**
      * @brief Constructs a FromBytes decoder with an input byte span.
      * @param data The input data buffer to decode from.
      */
-    FromBytes(std::span<const uint8_t> data) : bytes_(data) {};
+    FromBytes(ConstSpanOfBytes data) : bytes_(data) {};
+
+    template <typename... Args>
+    FromBytes(ConstSpanOfBytes data, const Args&... args)
+        : Decoder(args...), bytes_(data){};
 
     FromBytes(FromBytes &&) noexcept = delete;
     FromBytes(const FromBytes &) = delete;
@@ -49,6 +53,9 @@ namespace scale::backend {
      * @return The next byte.
      */
     uint8_t take() override {
+      if (bytes_.size() < 1) {
+        raise(DecodeError::NOT_ENOUGH_DATA);
+      }
       auto &&byte = bytes_.front();
       bytes_ = bytes_.last(bytes_.size() - 1);
       return byte;
@@ -59,6 +66,9 @@ namespace scale::backend {
      * @param out The span to store the read bytes.
      */
     void read(std::span<uint8_t> out) override {
+      if (bytes_.size() < out.size()) {
+        raise(DecodeError::NOT_ENOUGH_DATA);
+      }
       std::memcpy(out.data(), bytes_.data(), out.size());
       bytes_ = bytes_.last(bytes_.size() - out.size());
     }
@@ -66,6 +76,7 @@ namespace scale::backend {
    private:
     /// Internal reference to input byte buffer.
     std::span<const uint8_t> bytes_;
+    size_t all_;
   };
 
 }  // namespace scale::backend
