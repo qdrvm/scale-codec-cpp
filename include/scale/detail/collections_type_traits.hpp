@@ -15,7 +15,14 @@
 
 #pragma once
 
+#include <array>
+#include <deque>
+#include <list>
+#include <map>
+#include <set>
 #include <span>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <scale/detail/compact_integer.hpp>
 #include <scale/outcome/outcome_throw.hpp>
@@ -25,6 +32,90 @@
 namespace scale {
 
   namespace detail::collections {
+
+    /**
+     * @brief Concept to check if a type is an immutable collection.
+     *
+     * A type is considered an immutable collection if it has a nested type
+     * `value_type` and that type is `const`.
+     *
+     * @tparam T The type to check.
+     */
+    template <typename T>
+    concept ImmutableCollection = requires {
+      typename T::value_type;
+    } and std::is_const_v<std::remove_reference_t<typename T::value_type>>;
+
+    // Don't change by default
+    template <typename T>
+    struct mutable_collection_impl {
+      using type = T;
+    };
+
+    // For C-style array
+    template <typename T, std::size_t N>
+    struct mutable_collection_impl<T[N]> {
+      using type = std::array<std::remove_const_t<T>, N>;
+    };
+
+    // For array
+    template <typename T, std::size_t N>
+    struct mutable_collection_impl<std::array<const T, N>> {
+      using type = std::array<T, N>;
+    };
+
+    // For std::vector, std::deque, std::list, etc.
+    template <template <typename, typename...> class Container,
+              typename T,
+              typename Alloc,
+              typename... Args>
+    struct mutable_collection_impl<Container<const T, Alloc, Args...>> {
+      using MutableAlloc =
+          typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+      using type = Container<T, MutableAlloc, Args...>;
+    };
+
+    // For std::set<const T, Compare, Alloc>
+    template <typename T, typename Compare, typename Alloc>
+    struct mutable_collection_impl<std::set<const T, Compare, Alloc>> {
+      using MutableAlloc =
+          typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+      using type = std::set<T, Compare, MutableAlloc>;
+    };
+
+    // For std::map<const Key, Value, Compare, Alloc>
+    template <typename Key, typename Value, typename Compare, typename Alloc>
+    struct mutable_collection_impl<std::map<const Key, Value, Compare, Alloc>> {
+      using MutableAlloc = typename std::allocator_traits<
+          Alloc>::template rebind_alloc<std::pair<const Key, Value>>;
+      using type = std::map<Key, Value, Compare, MutableAlloc>;
+    };
+
+    // For std::unordered_set<const T, Hash, KeyEqual, Alloc>
+    template <typename T, typename Hash, typename KeyEqual, typename Alloc>
+    struct mutable_collection_impl<
+        std::unordered_set<const T, Hash, KeyEqual, Alloc>> {
+      using MutableAlloc =
+          typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+      using type = std::unordered_set<T, Hash, KeyEqual, MutableAlloc>;
+    };
+
+    // For std::unordered_map<const Key, Value, Hash, KeyEqual, Alloc>
+    template <typename Key,
+              typename Value,
+              typename Hash,
+              typename KeyEqual,
+              typename Alloc>
+    struct mutable_collection_impl<
+        std::unordered_map<const Key, Value, Hash, KeyEqual, Alloc>> {
+      using MutableAlloc = typename std::allocator_traits<
+          Alloc>::template rebind_alloc<std::pair<const Key, Value>>;
+      using type = std::unordered_map<Key, Value, Hash, KeyEqual, MutableAlloc>;
+    };
+
+    // alias
+    template <typename T>
+    using mutable_collection_t = typename mutable_collection_impl<T>::type;
 
     /**
      * @brief Concept for detecting std::span-like types.

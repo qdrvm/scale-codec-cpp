@@ -104,7 +104,15 @@ namespace scale {
     requires NoTagged<decltype(collection)>
              and (not Decomposable<decltype(collection)>)
   {
-    for (auto &item : collection) {
+    using Collection = std::remove_cvref_t<decltype(collection)>;
+    using MutableCollection = std::conditional_t<
+        detail::collections::ImmutableCollection<Collection>,
+        detail::collections::mutable_collection_t<Collection>,
+        Collection>;
+
+    auto &mutable_collection = reinterpret_cast<MutableCollection &>(
+        const_cast<Collection &>(collection));
+    for (decltype(auto) item : mutable_collection) {
       decode(item, decoder);
     }
   }
@@ -147,6 +155,15 @@ namespace scale {
   void decode(ResizeableCollection auto &collection, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(collection)>
   {
+    using Collection = std::remove_cvref_t<decltype(collection)>;
+    using MutableCollection = std::conditional_t<
+        detail::collections::ImmutableCollection<Collection>,
+        detail::collections::mutable_collection_t<Collection>,
+        Collection>;
+
+    auto &mutable_collection =
+        reinterpret_cast<MutableCollection &>(collection);
+
     size_t item_count;
     decode(as_compact(item_count), decoder);
     if (item_count > collection.max_size()) {
@@ -154,12 +171,12 @@ namespace scale {
     }
 
     try {
-      collection.resize(item_count);
+      mutable_collection.resize(item_count);
     } catch (const std::bad_alloc &) {
       raise(DecodeError::TOO_MANY_ITEMS);
     }
 
-    for (auto &item : collection) {
+    for (decltype(auto) item : mutable_collection) {
       decode(item, decoder);
     }
   }
@@ -174,7 +191,8 @@ namespace scale {
     requires NoTagged<decltype(collection)>
   {
     using size_type = typename std::decay_t<decltype(collection)>::size_type;
-    using value_type = typename std::decay_t<decltype(collection)>::value_type;
+    using value_type = std::remove_const_t<
+        typename std::decay_t<decltype(collection)>::value_type>;
 
     size_type item_count;
     decode(as_compact(item_count), decoder);
@@ -184,7 +202,7 @@ namespace scale {
 
     collection.clear();
     for (size_type i = 0u; i < item_count; ++i) {
-      value_type item;
+      value_type item{};
       decode(item, decoder);
       try {
         collection.emplace(std::move(item));

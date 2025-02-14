@@ -40,3 +40,12 @@ TEST(Pair, Decode) {
   ASSERT_EQ(decoded.first, 1);
   ASSERT_EQ(decoded.second, 2);
 }
+
+TEST(Pair, EncodeAndDecode) {
+  using Pair = std::pair<uint8_t, uint32_t>;;
+  Pair pair = {13, 777};
+
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(pair));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<Pair>(encoded));
+  ASSERT_EQ(decoded, pair);
+}

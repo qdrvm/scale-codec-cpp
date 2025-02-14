@@ -102,7 +102,7 @@ namespace scale::impl {
     template <typename T>
     outcome::result<T> decode(ConstSpanOfBytes bytes) {
       Decoder decoder{bytes};
-      T value;
+      T value{};
       try {
         decode(value, decoder);
       } catch (std::system_error &e) {

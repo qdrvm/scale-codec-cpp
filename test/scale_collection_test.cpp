@@ -6,6 +6,8 @@
 
 #include <gtest/gtest.h>
 
+#include <set>
+
 #include <qtils/test/outcome.hpp>
 #include <scale/bitvec.hpp>
 #include <scale/scale.hpp>
@@ -449,4 +451,163 @@ TEST(CollectionTest, encodeStringView) {
   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
   ASSERT_OUTCOME_SUCCESS(decoded, decode<std::string>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
+}
+
+TEST(CollectionTest, decodeToMutableCollection) {
+  {
+    using TestCollection = uint16_t[scale::detail::MAX_FIELD_NUM + 1];
+
+    TestCollection collection{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                              12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    Decoder decoder(encoded);
+    TestCollection decoded;
+    ASSERT_NO_THROW(decode(decoded, decoder));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
+  }
+  {
+    using TestCollection =
+        std::array<uint16_t, scale::detail::MAX_FIELD_NUM + 1>;
+
+    TestCollection collection{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                              12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::vector<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::deque<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::list< uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::set< uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::map<uint16_t,  uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::unordered_map<uint16_t,  uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+}
+
+TEST(CollectionTest, decodeToImmutableCollection) {
+  {
+    using TestCollection = const uint16_t[scale::detail::MAX_FIELD_NUM + 1];
+
+    TestCollection collection = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                 12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    Decoder decoder(encoded);
+    TestCollection decoded{};
+    ASSERT_NO_THROW(decode(decoded, decoder));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
+  }
+  {
+    using TestCollection =
+        std::array<const uint16_t, scale::detail::MAX_FIELD_NUM + 1>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::vector<const uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::deque<const uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::list<const uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::set<const uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::map<uint16_t, const uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::unordered_map<uint16_t, const uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
 }
