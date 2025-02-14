@@ -113,7 +113,10 @@ namespace scale {
       using type = std::unordered_map<Key, Value, Hash, KeyEqual, MutableAlloc>;
     };
 
-    // alias
+    /**
+     * @brief Transform the mutable version of an immutable collection.
+     * @tparam T The immutable collection type.
+     */
     template <typename T>
     using mutable_collection_t = typename mutable_collection_impl<T>::type;
 

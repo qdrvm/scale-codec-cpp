@@ -10,7 +10,9 @@
 
 using scale::ByteArray;
 using scale::impl::memory::decode;
+using scale::impl::memory::Decoder;
 using scale::impl::memory::encode;
+using scale::impl::memory::Encoder;
 
 /**
  * @given 3 values of different types: uint8_t, uint32_t and uint8_t
@@ -56,4 +58,22 @@ TEST(Tuple, EncodeAndDecode) {
   ASSERT_OUTCOME_SUCCESS(actual_bytes, encode(tuple));
   ASSERT_OUTCOME_SUCCESS(decoded, decode<Tuple>(actual_bytes));
   ASSERT_EQ(decoded, tuple);
+}
+
+TEST(Tie, EncodeAndDecode) {
+  uint8_t src1 = 13;
+  const uint16_t src2 = 777;
+
+  uint8_t dst1 = 0;
+  const uint16_t dst2 = 0;
+
+  Encoder encoder;
+  ASSERT_NO_THROW(encode(std::tie(src1, src2), encoder));
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(std::tie(src1, src2)));
+
+  Decoder decoder{encoded};
+  ASSERT_NO_THROW(decode(std::tie(dst1, dst2), decoder));
+
+  ASSERT_EQ(src1, dst1);
+  ASSERT_EQ(src2, dst2);
 }
