@@ -33,38 +33,6 @@ namespace scale {
    */
   class Decoder : public Configurable {
    public:
-    // struct Z {};
-    //
-    // static constexpr auto N =
-    // detail::common::max_constructor_args<BackendType>;
-    //
-    // /**
-    //  * @brief Constructs a Decoder with backend and configuration parameters.
-    //  * @tparam I1 Index sequence for backend constructor arguments.
-    //  * @tparam I2 Index sequence for configuration constructor arguments.
-    //  * @tparam Args Variadic template arguments.
-    //  */
-    // template <std::size_t... I1, std::size_t... I2, typename... Args>
-    // explicit Decoder(Z,
-    //                  std::index_sequence<I1...>,
-    //                  std::index_sequence<I2...>,
-    //                  Args &&...args)
-    //     : Configurable(std::get<I2>(std::forward_as_tuple(args...))...),
-    //       backend_(std::get<I1>(std::forward_as_tuple(args...))...) {}
-    //
-    // /**
-    //  * @brief Constructs a Decoder with a specified number of configuration
-    //  * arguments.
-    //  * @tparam N Number of configuration arguments.
-    //  * @tparam Args Variadic template arguments.
-    //  */
-    // template <std::size_t N, typename... Args>
-    // explicit Decoder(Args &&...args)
-    //     : Decoder(Z{},
-    //               std::make_index_sequence<sizeof...(Args) - N>{},
-    //               std::make_index_sequence<N>{},
-    //               std::forward<Args>(args)...) {}
-
 #ifdef CUSTOM_CONFIG_ENABLED
     /**
      * @brief Constructs a decoder with custom configurations.
@@ -78,8 +46,7 @@ namespace scale {
      * @brief Constructs a decoder without custom configurations.
      * @tparam Args Variadic template arguments for backend initialization.
      */
-    template <typename... Args>
-    explicit Decoder(Args &&...args) : backend_(std::forward<Args>(args)...) {}
+    Decoder() = default;
 #endif
 
     /**
