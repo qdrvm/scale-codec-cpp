@@ -118,13 +118,6 @@ target_link_libraries(scale_boost_variant_test
     scale
 )
 
-addtest(scale_pair_test
-    scale_pair_test.cpp
-)
-target_link_libraries(scale_pair_test
-    scale
-)
-
 addtest(scale_strings_test
     scale_strings_test.cpp
 )
@@ -136,13 +129,6 @@ addtest(scale_convenience_functions_test
     scale_convenience_functions_test.cpp
 )
 target_link_libraries(scale_convenience_functions_test
-    scale
-)
-
-addtest(scale_tuple_test
-    scale_tuple_test.cpp
-)
-target_link_libraries(scale_tuple_test
     scale
 )
 
@@ -160,13 +146,6 @@ target_link_libraries(scale_encode_counter_test
     scale
 )
 
-addtest(scale_custom_decomposing_test
-    scale_custom_decomposing_test.cpp
-)
-target_link_libraries(scale_custom_decomposing_test
-    scale
-)
-
 addtest(scale_sptr_and_refs_test
     scale_sptr_and_refs_test.cpp
 )
@@ -178,6 +157,13 @@ addtest(scale_tagged_test
     scale_tagged_test.cpp
 )
 target_link_libraries(scale_tagged_test
+    scale
+)
+
+addtest(scale_decomposable_test
+    scale_decomposable_test.cpp
+)
+target_link_libraries(scale_decomposable_test
     scale
 )
 

@@ -138,8 +138,7 @@ namespace scale {
        * @param value The CompactReflection instance.
        * @param decoder The decoder to use.
        */
-      friend void decode(CompactReflection &&value,
-                         ScaleDecoder auto &decoder) {
+      friend void decode(CompactReflection &value, ScaleDecoder auto &decoder) {
         Compact<std::remove_cvref_t<T>> tmp;
         decode(tmp, decoder);
         value.ref = untagged(tmp);

@@ -97,9 +97,8 @@ namespace scale {
   void decode(Decomposable auto &decomposable, ScaleDecoder auto &decoder)
     requires NoTagged<decltype(decomposable)>
   {
-    return decompose_and_apply(decomposable, [&](auto &...args) {
-      (decode(const_cast<std::remove_cvref_t<decltype(args)> &>(args), decoder),
-       ...);
+    return decompose_and_apply(decomposable, [&](auto &&...args) {
+        (decode(const_cast<std::remove_cv_t<std::remove_reference_t<decltype(args)>>&>(args), decoder), ...);
     });
   }
 
