@@ -37,3 +37,31 @@
   friend decltype(auto) decompose_and_apply(V &&v, F &&f) {                    \
     return std::forward<V>(v)._custom_decompose_and_apply(std::forward<F>(f)); \
   }
+
+/**
+ * @brief A helper macro to cast the current object to its base type while
+ * preserving its qualifiers.
+ *
+ * @param Base The base class type.
+ *
+ * Example usage:
+ * @code
+ * struct Base1 {
+ *   ...
+ * };
+ * struct Base2 {
+ *   Member2 member;
+ * };
+ * struct Derived : Base1, Base2 {
+ *   Member our_member;
+ *
+ *   SCALE_CUSTOM_DECOMPOSITION(
+ *     Derived,
+ *     SCALE_FROM_BASE(Base1),        // coding whole Base1
+ *     SCALE_FROM_BASE(Base2).member, // coding single member of Base2
+ *     our_member);
+ * };
+ * @endcode
+ */
+#define SCALE_FROM_BASE(Base) \
+  ((qtils::detail::tagged::copy_qualifiers_t<decltype(*this), Base>)(*this))
