@@ -4,6 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @brief Unit tests for verifying the correctness of SCALE encoding and decoding
+ *        for various decomposable data structures.
+ *
+ * This file contains test cases that check the encoding and decoding of
+ * fundamental types, arrays, tuples, and user-defined structures using
+ * the SCALE codec implementation.
+ */
+
 #include <gtest/gtest.h>
 
 #include <set>
@@ -55,9 +64,9 @@ TEST(Decomposable, Pair) {
 }
 
 /**
- * @given a tuple composed of 4 different values and correspondent byte array
+ * @given a tuple composed of 4 different values and corresponding byte array
  * @when tuple is encoded, @and then decoded
- * @then decoded value come up with original tuple
+ * @then decoded value matches the original tuple
  */
 TEST(Decomposable, Tuple) {
   using Testee = std::tuple<uint8_t, uint16_t, const uint32_t, const uint64_t>;

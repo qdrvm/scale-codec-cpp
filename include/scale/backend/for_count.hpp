@@ -1,5 +1,5 @@
 /**
- * Copyright Quadrivium LLC
+* Copyright Quadrivium LLC
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -24,7 +24,7 @@ namespace scale::backend {
    * @brief Encoder backend that counts the number of bytes encoded.
    */
   class ForCount final : public Encoder {
-   public:
+  public:
     /**
      * @brief Default constructor.
      */
@@ -59,7 +59,7 @@ namespace scale::backend {
       return count_;
     }
 
-   private:
+  private:
     size_t count_{0};  ///< Internal counter tracking the number of bytes.
   };
 

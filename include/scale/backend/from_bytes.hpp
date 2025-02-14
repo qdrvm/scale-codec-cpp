@@ -28,16 +28,21 @@ namespace scale::backend {
      * @brief Constructs a FromBytes decoder with an input byte span.
      * @param data The input data buffer to decode from.
      */
-    FromBytes(ConstSpanOfBytes data) : bytes_(data) {};
+    explicit FromBytes(ConstSpanOfBytes data) : bytes_(data) {}
 
+    /**
+     * @brief Constructs a FromBytes decoder with an input byte span and additional configurations.
+     * @param data The input data buffer to decode from.
+     * @param args Additional configuration parameters.
+     */
     template <typename... Args>
-    FromBytes(ConstSpanOfBytes data, const Args&... args)
-        : Decoder(args...), bytes_(data){};
+    FromBytes(ConstSpanOfBytes data, const Args &...args)
+        : Decoder(args...), bytes_(data) {}
 
     FromBytes(FromBytes &&) noexcept = delete;
     FromBytes(const FromBytes &) = delete;
     FromBytes &operator=(FromBytes &&) noexcept = delete;
-    FromBytes &operator=(FromBytes const &) = delete;
+    FromBytes &operator=(const FromBytes &) = delete;
 
     /**
      * @brief Checks if there are at least `amount` bytes available for reading.
@@ -51,32 +56,32 @@ namespace scale::backend {
     /**
      * @brief Takes and removes the next byte from the buffer.
      * @return The next byte.
+     * @throws DecodeError::NOT_ENOUGH_DATA if there are no more bytes to read.
      */
     uint8_t take() override {
-      if (bytes_.size() < 1) {
+      if (bytes_.empty()) {
         raise(DecodeError::NOT_ENOUGH_DATA);
       }
-      auto &&byte = bytes_.front();
-      bytes_ = bytes_.last(bytes_.size() - 1);
+      uint8_t byte = bytes_.front();
+      bytes_ = bytes_.subspan(1);
       return byte;
     }
 
     /**
      * @brief Reads a sequence of bytes into the provided output span.
      * @param out The span to store the read bytes.
+     * @throws DecodeError::NOT_ENOUGH_DATA if there are not enough bytes available.
      */
     void read(std::span<uint8_t> out) override {
       if (bytes_.size() < out.size()) {
         raise(DecodeError::NOT_ENOUGH_DATA);
       }
       std::memcpy(out.data(), bytes_.data(), out.size());
-      bytes_ = bytes_.last(bytes_.size() - out.size());
+      bytes_ = bytes_.subspan(out.size());
     }
 
    private:
-    /// Internal reference to input byte buffer.
-    std::span<const uint8_t> bytes_;
-    size_t all_;
+    std::span<const uint8_t> bytes_;  ///< Internal reference to input byte buffer.
   };
 
 }  // namespace scale::backend

@@ -27,10 +27,17 @@ namespace scale::backend {
    */
   class ToBytes final : public Encoder {
    public:
+    /**
+     * @brief Constructs a ToBytes encoder with optional configuration.
+     * @tparam Args Variadic template parameters for configuration.
+     * @param args Configuration arguments.
+     */
     template <typename... Args>
     ToBytes(Args &&...args) : Encoder(std::forward<Args>(args)...){};
 
+    /// @brief Default constructor.
     ToBytes() = default;
+
     ToBytes(ToBytes &&) noexcept = delete;
     ToBytes(const ToBytes &) = delete;
     ToBytes &operator=(ToBytes &&) noexcept = delete;
@@ -46,7 +53,7 @@ namespace scale::backend {
 
     /**
      * @brief Writes a sequence of bytes to the encoded buffer.
-     * @param byte Span of bytes to write.
+     * @param bytes Span of bytes to write.
      */
     void write(std::span<const uint8_t> bytes) override {
       bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());

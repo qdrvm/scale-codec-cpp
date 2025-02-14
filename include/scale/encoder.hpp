@@ -15,19 +15,22 @@
 
 #include <scale/configurable.hpp>
 #include <scale/types.hpp>
+#include <span>
 
 namespace scale {
 
   /**
    * @class Encoder
-   * @brief A generic SCALE encoder using a backend for byte storage.
-   * @tparam EncoderBackendT The backend type that implements encoding logic.
+   * @brief A generic SCALE encoder used for byte storage.
    *
-   * This class extends Configurable and provides an interface to encode data
-   * using a backend. It supports custom configurations when enabled at
-   * compile-time.
+   * This class extends Configurable and provides an interface to encode data.
+   * It supports custom configurations when enabled at compile-time.
    */
-  class Encoder : public Configurable {
+  class Encoder
+#ifdef CUSTOM_CONFIG_ENABLED
+      : public Configurable
+#endif
+  {
    public:
     /// @brief Default constructor.
     Encoder() = default;
@@ -43,7 +46,7 @@ namespace scale {
     /**
      * @brief Constructor is deleted if custom config is not enabled.
      */
-    [[deprecated("Scale has compiled without custom config support")]]  //
+    [[deprecated("Scale has compiled without custom config support")]]
     explicit Encoder(const MaybeConfig auto &...configs) = delete;
 #endif
 
@@ -54,10 +57,10 @@ namespace scale {
     virtual void put(uint8_t byte) = 0;
 
     /**
-     * @brief Writes a span of bytes to the backend.
-     * @param byte A span of bytes to write.
+     * @brief Writes a sequence of bytes to the backend.
+     * @param bytes A span of bytes to write.
      */
-    virtual void write(std::span<const uint8_t> byte) = 0;
+    virtual void write(std::span<const uint8_t> bytes) = 0;
 
     /**
      * @brief Gets the current size of the encoded data.
@@ -67,8 +70,9 @@ namespace scale {
   };
 
   /**
-   * @brief Encodes a value using the backend.
+   * @brief Encodes a value using an encoder.
    * @tparam T The type of the value to encode.
+   * @param encoder The encoder instance.
    * @param value The value to encode.
    * @return Reference to the encoder for chaining operations.
    */

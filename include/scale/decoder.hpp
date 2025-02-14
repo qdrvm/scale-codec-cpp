@@ -24,15 +24,22 @@ namespace scale {
 
   /**
    * @class Decoder
-   * @brief A generic SCALE decoder using a backend for byte extraction.
-   * @tparam DecoderBackendT The backend type that implements decoding logic.
+   * @brief A generic SCALE decoder.
    *
-   * This class extends Configurable and provides an interface to decode data
-   * using a backend. It supports custom configurations when enabled at
-   * compile-time.
+   * This class extends Configurable and provides an interface to decode data.
+   * It supports custom configurations when enabled at compile-time.
    */
-  class Decoder : public Configurable {
+  class Decoder
+#ifdef CUSTOM_CONFIG_ENABLED
+      : public Configurable
+#endif
+  {
    public:
+    /**
+     * @brief Constructs a decoder without custom configurations.
+     */
+    Decoder() = default;
+
 #ifdef CUSTOM_CONFIG_ENABLED
     /**
      * @brief Constructs a decoder with custom configurations.
@@ -42,23 +49,20 @@ namespace scale {
     explicit Decoder(const MaybeConfig auto &...configs)
         : Configurable(configs...) {}
 #else
-    /**
-     * @brief Constructs a decoder without custom configurations.
-     * @tparam Args Variadic template arguments for backend initialization.
-     */
-    Decoder() = default;
+    [[deprecated("Scale has compiled without custom config support")]]  //
+    explicit Decoder(const MaybeConfig auto &...configs) = delete;
 #endif
 
     /**
      * @brief Checks whether n more bytes are available.
-     * @param n Number of bytes to check.
-     * @return True if n more bytes are available, false otherwise.
+     * @param amount Number of bytes to check.
+     * @return True if amount bytes are available, false otherwise.
      */
     [[nodiscard]] virtual bool has(size_t amount) const = 0;
 
     /**
-     * @brief Takes one byte from the backend.
-     * @return The byte read from the backend.
+     * @brief Takes one byte from source.
+     * @return The byte read from source.
      */
     virtual uint8_t take() = 0;
 
@@ -70,7 +74,7 @@ namespace scale {
   };
 
   /**
-   * @brief Decodes a value using the backend.
+   * @brief Decodes a value using decoder.
    * @tparam T The type of the value to decode.
    * @param value The value to decode.
    * @return Reference to the decoder for chaining operations.
