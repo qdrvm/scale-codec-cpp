@@ -44,7 +44,7 @@ namespace scale {
   {
     encode(as_compact(collection.size()), encoder);
     for (auto &&item : std::forward<decltype(collection)>(collection)) {
-      encode(item, encoder);
+      encode(std::as_const(item), encoder);
     }
   }
 
@@ -58,7 +58,7 @@ namespace scale {
              and (not DecomposableArray<decltype(collection)>)
   {
     for (auto &&item : std::forward<decltype(collection)>(collection)) {
-      encode(item, encoder);
+      encode(std::as_const(item), encoder);
     }
   }
 

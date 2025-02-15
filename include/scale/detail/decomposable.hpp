@@ -82,11 +82,14 @@ namespace scale {
   void encode(Decomposable auto &&decomposable, Encoder &encoder)
     requires NoTagged<decltype(decomposable)>
   {
-    decompose_and_apply(std::forward<decltype(decomposable)>(decomposable),
-                        [&](auto &&...args) {
-                          (encode(std::forward<decltype(args)>(args), encoder),
-                           ...);
-                        });
+    decompose_and_apply(
+        std::forward<decltype(decomposable)>(decomposable),
+        [&](auto &&...args) {
+          (encode(static_cast<const std::remove_reference_t<decltype(args)> &>(
+                      args),
+                  encoder),
+           ...);
+        });
   }
 
   /**
