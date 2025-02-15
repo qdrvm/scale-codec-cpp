@@ -80,7 +80,7 @@ namespace scale::impl {
       return std::move(value);
     }
 
-    using DecoderForCount = backend::ForCount;
+    using EncoderForCount = backend::ForCount;
 
     /**
      * @brief Emulates encoding of value using SCALE, and count bytes
@@ -91,7 +91,7 @@ namespace scale::impl {
      */
     template <typename T>
     outcome::result<size_t> encoded_size(T &&value) {
-      DecoderForCount encoder;
+      EncoderForCount encoder;
       try {
         // Allways send encoding value by const-lvalue-reference
         encode(static_cast<const std::remove_reference_t<T> &>(value), encoder);
