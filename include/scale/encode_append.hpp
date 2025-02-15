@@ -17,7 +17,7 @@ namespace scale {
   struct EncodeOpaqueValue {
     ConstSpanOfBytes v;
 
-    friend void encode(EncodeOpaqueValue &&opaque, Encoder &encoder) {
+    friend void encode(const EncodeOpaqueValue &opaque, Encoder &encoder) {
       for (auto &item : opaque.v) {
         encode(item, encoder);
       }

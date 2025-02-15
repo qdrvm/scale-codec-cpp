@@ -113,7 +113,7 @@ namespace scale {
   void encode(CompactInteger auto &&integer, Encoder &encoder) {
     if (integer < detail::compact_integer::kMinUint16) {
       uint8_t v = (convert_to<uint8_t>(integer) << 2u) | 0b00;
-      return encode(v, encoder);
+      return encoder.put(v);
     }
 
     if (integer < detail::compact_integer::kMinUint32) {
