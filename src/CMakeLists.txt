@@ -26,6 +26,11 @@ target_link_libraries(scale
 add_library(scale_append
     encode_append.cpp
 )
+target_include_directories(scale_append PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 target_link_libraries(scale_append
     scale
 )
