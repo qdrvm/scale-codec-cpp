@@ -22,12 +22,6 @@ namespace scale {
         encode(item, encoder);
       }
     }
-
-    // friend void decode(EncodeOpaqueValue &opaque, Decoder &decoder) {
-    //   for (auto &item : opaque.v) {
-    //     decode(item, decoder);
-    //   }
-    // }
   };
 
   /**
