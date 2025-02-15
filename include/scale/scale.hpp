@@ -51,7 +51,8 @@ namespace scale::impl {
     outcome::result<std::vector<uint8_t>> encode(T &&value) {
       EncoderToBytes encoder;
       try {
-        encode(std::forward<T>(value), encoder);
+        // Allways send encoding value by const-lvalue-reference
+        encode(static_cast<const std::remove_reference_t<T> &>(value), encoder);
       } catch (std::system_error &e) {
         return outcome::failure(e.code());
       }
@@ -78,6 +79,26 @@ namespace scale::impl {
       }
       return std::move(value);
     }
+
+    /**
+     * @brief Emulates encoding of value using SCALE, and count bytes
+     *
+     * @tparam T The type of the value to encode.
+     * @param value The value to encode.
+     * @return A result size of encoding result or an error.
+     */
+    template <typename T>
+    outcome::result<size_t> encoded_size(T &&value) {
+      ::scale::backend::ForCount encoder;
+      try {
+        // Allways send encoding value by const-lvalue-reference
+        encode(static_cast<const std::remove_reference_t<T> &>(value), encoder);
+      } catch (std::system_error &e) {
+        return outcome::failure(e.code());
+      }
+      return std::move(encoder).size();
+    }
+
   }  // namespace memory
 
 }  // namespace scale::impl
