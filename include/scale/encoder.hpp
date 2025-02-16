@@ -32,7 +32,6 @@ namespace scale {
 #endif
   {
    public:
-    /// @brief Default constructor.
     Encoder() = default;
 
 #ifdef CUSTOM_CONFIG_ENABLED
@@ -49,6 +48,8 @@ namespace scale {
     [[deprecated("Scale has compiled without custom config support")]]
     explicit Encoder(const MaybeConfig auto &...configs) = delete;
 #endif
+
+    virtual ~Encoder() = default;
 
     /**
      * @brief Writes a single byte to the backend.

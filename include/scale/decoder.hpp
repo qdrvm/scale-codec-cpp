@@ -53,6 +53,8 @@ namespace scale {
     explicit Decoder(const MaybeConfig auto &...configs) = delete;
 #endif
 
+    virtual ~Decoder() = default;
+
     /**
      * @brief Checks whether n more bytes are available.
      * @param amount Number of bytes to check.
