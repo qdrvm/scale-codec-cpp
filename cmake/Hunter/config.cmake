@@ -19,6 +19,6 @@
 
 hunter_config(
     qtils
-    URL  https://github.com/qdrvm/qtils/archive/16e7c819dd50af2f64e2d319b918d0d815332266.tar.gz
-    SHA1 71989938b5c8b7650eaf1a8195c2b52c5a8c250b
+    URL  https://github.com/qdrvm/qtils/archive/f5013e52027f6b3014c2ae902a94903583898639.tar.gz
+    SHA1 ebc7ae5215bada4316ebf2917cfd61bd4a398b39
 )

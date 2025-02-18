@@ -5,16 +5,25 @@
  */
 
 #include <gtest/gtest.h>
+
+#include <qtils/test/outcome.hpp>
 #include <scale/scale.hpp>
 
-using scale::ScaleEncoderStream;
+using scale::backend::ForCount;
 
-class ScaleCounter : public ::testing::Test {
- public:
-  ScaleCounter() : s(true) {}
+template <typename T>
+outcome::result<size_t> encode(T &&value) {
+  ForCount encoder;
+  try {
+    encode(std::forward<T>(value), encoder);
+  } catch (std::system_error &e) {
+    return outcome::failure(e.code());
+  }
+  return std::move(encoder).size();
+}
 
+class ScaleCounter : public testing::Test {
  protected:
-  ScaleEncoderStream s;
 };
 
 struct TestStruct {
@@ -22,17 +31,14 @@ struct TestStruct {
   std::string y;
 };
 
-// helper for same kind checks
-#define SIZE(bytes) ASSERT_EQ(s.size(), bytes)
-
 /**
  * @given a bool
  * @when it gets scale encoded
  * @then the resulting stream size equals to expected
  */
 TEST_F(ScaleCounter, Bool) {
-  s << true;
-  SIZE(1);
+  ASSERT_OUTCOME_SUCCESS(count, encode(true));
+  ASSERT_EQ(count, 1);
 }
 
 /**
@@ -42,8 +48,8 @@ TEST_F(ScaleCounter, Bool) {
  */
 TEST_F(ScaleCounter, String) {
   std::string value = "test string";
-  s << value;
-  SIZE(value.size() + 1);
+  ASSERT_OUTCOME_SUCCESS(count, encode(value));
+  ASSERT_EQ(count, value.size() + 1);
 }
 
 /**
@@ -53,8 +59,8 @@ TEST_F(ScaleCounter, String) {
  */
 TEST_F(ScaleCounter, EmptyOptional) {
   std::optional<uint32_t> var = std::nullopt;
-  s << var;
-  SIZE(1);
+  ASSERT_OUTCOME_SUCCESS(count, encode(var));
+  ASSERT_EQ(count, 1);
 }
 
 /**
@@ -64,8 +70,8 @@ TEST_F(ScaleCounter, EmptyOptional) {
  */
 TEST_F(ScaleCounter, NonEmptyOptional) {
   std::optional<uint32_t> var = 10;
-  s << var;
-  SIZE(5);
+  ASSERT_OUTCOME_SUCCESS(count, encode(var));
+  ASSERT_EQ(count, 5);
 }
 
 /**
@@ -75,6 +81,6 @@ TEST_F(ScaleCounter, NonEmptyOptional) {
  */
 TEST_F(ScaleCounter, CustomStruct) {
   TestStruct st{.x = 10, .y = "test string"};
-  s << st;
-  SIZE(1 + st.y.size() + 1);
+  ASSERT_OUTCOME_SUCCESS(count, encode(st));
+  ASSERT_EQ(count, 1 + st.y.size() + 1);
 }

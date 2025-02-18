@@ -12,23 +12,23 @@
 #include <scale/scale.hpp>
 
 using scale::append_or_new_vec;
-using scale::ByteArray;
+using scale::impl::memory::encode;
 
 using Values = std::vector<uint16_t>;
 
-TEST(EncodeAppend, Expend_from0_to1024) {
+TEST(EncodeAppend, Expend_from_0_to_1024) {
   Values values;
 
-  auto expandable = scale::encode(values).value();
+  ASSERT_OUTCOME_SUCCESS(expandable, encode(values));
 
   uint16_t value = 0;
   for ([[maybe_unused]] auto i : std::views::iota(0, 1024)) {
     values.emplace_back(++value);
 
-    auto expending = scale::encode(value).value();
+    ASSERT_OUTCOME_SUCCESS(expending, encode(value));
     ASSERT_OUTCOME_SUCCESS(append_or_new_vec(expandable, expending));
 
-    auto direct_encoded = scale::encode(values).value();
+    ASSERT_OUTCOME_SUCCESS(direct_encoded, encode(values));
 
     ASSERT_EQ(expandable.size(), direct_encoded.size());
     EXPECT_EQ(expandable, direct_encoded);
