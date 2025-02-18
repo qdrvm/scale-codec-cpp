@@ -5,8 +5,8 @@
  */
 
 /**
- * @brief Unit tests for verifying the correctness of SCALE encoding and decoding
- *        for various decomposable data structures.
+ * @brief Unit tests for verifying the correctness of SCALE encoding and
+ * decoding for various decomposable data structures.
  *
  * This file contains test cases that check the encoding and decoding of
  * fundamental types, arrays, tuples, and user-defined structures using
@@ -17,6 +17,7 @@
 
 #include <set>
 
+#include <qtils/empty.hpp>
 #include <qtils/test/outcome.hpp>
 #include <scale/bitvec.hpp>
 #include <scale/scale.hpp>
@@ -30,6 +31,17 @@ using scale::impl::memory::decode;
 using scale::impl::memory::encode;
 using Encoder = scale::backend::ToBytes;
 using Decoder = scale::backend::FromBytes;
+
+TEST(Decomposable, Empty) {
+  using Testee = qtils::Empty;
+
+  Testee value{};
+
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(value));
+  ASSERT_OUTCOME_SUCCESS(decode<Testee>(encoded));
+
+  ASSERT_TRUE(encoded.empty());
+}
 
 TEST(Decomposable, C_Style_array) {
   using Testee = const uint16_t[3];

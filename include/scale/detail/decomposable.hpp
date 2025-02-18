@@ -66,6 +66,12 @@ namespace scale {
     template <typename F>
     decltype(auto) decompose_and_apply(DecomposableAggregate auto &&v,
                                        const F &f) {
+      using T = std::remove_cvref_t<decltype(v)>;
+      static_assert(
+          std::is_empty_v<T> or field_number_of<T> > 0,
+          "Unusual decomposition of non empty aggregate; Use macro "
+          "'SCALE_CUSTOM_DECOMPOSITION' to define custom decomposition way");
+
       return decompose_and_apply<field_number_of<decltype(v)>>(
           std::forward<decltype(v)>(v), f);
     }

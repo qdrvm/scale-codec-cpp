@@ -84,16 +84,6 @@ namespace scale::detail::decomposable {
     template <typename T>
     concept DecomposableArray = not custom::CustomDecomposable<T>
                                 and ArrayWithMaxSize<T, MAX_FIELD_NUM>;
-
-    /**
-     * @brief Decomposes an array and applies a given function.
-     */
-    template <typename F>
-    decltype(auto) decompose_and_apply(DecomposableArray auto &&v, const F &f) {
-      return decompose_and_apply<array_size<decltype(v)>>(
-          std::forward<decltype(v)>(v), f);
-    }
-
   }  // namespace array
 
   namespace structurally_bindable {
@@ -139,18 +129,6 @@ namespace scale::detail::decomposable {
         (not custom::CustomDecomposable<T>)
         and (not array::DecomposableArray<T>)
         and StructurallyBindableWithMaxSize<T>;
-
-    /**
-     * @brief Decomposes a structurally bindable type and applies a given
-     * function.
-     */
-    template <typename F>
-    decltype(auto) decompose_and_apply(
-        DecomposableStructurallyBindable auto &&v, const F &f) {
-      return decompose_and_apply<structured_binding_size_v<decltype(v)>>(
-          std::forward<decltype(v)>(v), f);
-    }
-
   }  // namespace structurally_bindable
 
   namespace aggregate {
@@ -199,17 +177,6 @@ namespace scale::detail::decomposable {
         and (not array::DecomposableArray<T>)
         and (not structurally_bindable::DecomposableStructurallyBindable<T>)
         and (not collections::Collection<T>) and AggregateWithMaxSize<T>;
-
-    /**
-     * @brief Decomposes an aggregate and applies a given function.
-     */
-    template <typename F>
-    decltype(auto) decompose_and_apply(DecomposableAggregate auto &&v,
-                                       const F &f) {
-      return decompose_and_apply<field_number_of<decltype(v)>>(
-          std::forward<decltype(v)>(v), f);
-    }
-
   }  // namespace aggregate
 
   using aggregate::DecomposableAggregate;
