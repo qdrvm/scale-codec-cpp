@@ -39,6 +39,7 @@ namespace scale {
     TOO_MANY_ITEMS,       ///< Too many items, cannot address them in memory.
     WRONG_TYPE_INDEX,     ///< Incorrect type index, cannot decode variant.
     INVALID_ENUM_VALUE,   ///< Enum value does not belong to the expected enum.
+    UNUSED_BITS_ARE_SET,  ///< Unused bits are set.
     REDUNDANT_COMPACT_ENCODING,  ///< Redundant bytes found in compact encoding.
     DECODED_VALUE_OVERFLOWS_TARGET  ///< Decoded value overflows the target
                                     ///< type.

@@ -19,14 +19,15 @@
 
 #include <qtils/empty.hpp>
 #include <qtils/test/outcome.hpp>
-#include <scale/bitvec.hpp>
+#include <scale/bit_vector.hpp>
 #include <scale/scale.hpp>
 
 using scale::as_compact;
-using scale::BitVec;
+using scale::BitVector;
 using scale::ByteArray;
 using scale::CompactInteger;
 using scale::DecodeError;
+using scale::SmallBitVector;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
 using Encoder = scale::backend::ToBytes;

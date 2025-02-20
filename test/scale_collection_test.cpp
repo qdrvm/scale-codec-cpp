@@ -9,14 +9,15 @@
 #include <set>
 
 #include <qtils/test/outcome.hpp>
-#include <scale/bitvec.hpp>
+#include <scale/bit_vector.hpp>
 #include <scale/scale.hpp>
 
 using scale::as_compact;
-using scale::BitVec;
+using scale::BitVector;
 using scale::ByteArray;
 using scale::CompactInteger;
 using scale::DecodeError;
+using scale::SmallBitVector;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
 using Encoder = scale::backend::ToBytes;
@@ -72,29 +73,21 @@ TEST(CollectionTest, encodeVectorOfBool) {
   ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
-TEST(CollectionTest, encodeBitVec) {
-  BitVec collection;
-  collection.bits = {
-      // clang-format off
-      true, true, false, false, false, false, true, false, // 01000011
-      false, true, true, false, false                      // ___00110
-      // clang-format on
-  };
-  ByteArray vector_representation = {0b01000011, 0b00110};
+TEST(CollectionTest, SmallBitVec) {
+  SmallBitVector collection;
+  for (auto x : {
+           // clang-format off
+           true, true, false, false, false, false, true, false, // 01000011
+           false, true, true, false, false                      // ___00110
+           // clang-format on
+       }) {
+    collection.push_back(x);
+  }
+  ASSERT_EQ(collection.size(), 13);
 
   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
-
-  ASSERT_OUTCOME_SUCCESS(encodedLen,
-                         encode(as_compact(collection.bits.size())));
-
-  auto sizeLen = encodedLen.size();
-  auto out =
-      std::span(std::next(encoded.data(), sizeLen), encoded.size() - sizeLen);
-
-  ASSERT_TRUE(std::ranges::equal(out, vector_representation));
-
-  ASSERT_OUTCOME_SUCCESS(decoded, decode<BitVec>(encoded));
-  ASSERT_TRUE(std::ranges::equal(decoded.bits, collection.bits));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<SmallBitVector<>>(encoded));
+  ASSERT_EQ(decoded.data(), collection.data());
 }
 
 /**

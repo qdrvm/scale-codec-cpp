@@ -167,6 +167,13 @@ target_link_libraries(scale_decomposable_test
     scale
 )
 
+addtest(scale_bitvec_test
+    scale_bitvec_test.cpp
+)
+target_link_libraries(scale_bitvec_test
+    scale
+)
+
 if (CUSTOM_CONFIG_SUPPORT)
     addtest(scale_tune_test
         scale_tune_test.cpp
