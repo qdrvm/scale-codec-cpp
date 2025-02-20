@@ -171,65 +171,68 @@ namespace scale {
     auto first_byte = decoder.take();
     const uint8_t flag = first_byte & 0b00000011u;
 
-    if (flag == 0b00u) {
-      auto value = static_cast<size_t>(first_byte >> 2u);
-      integer = adjust(value);
-      return;
-    }
-
-    if (flag == 0b01u) {
-      auto second_byte = decoder.take();
-      auto value = (static_cast<size_t>(first_byte & 0b11111100u)
-                    + static_cast<size_t>(second_byte) * 256u)
-                   >> 2u;
-      if ((value >> 6) == 0) {
-        raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
-      }
-      integer = adjust(value);
-      return;
-    }
-
-    if (flag == 0b10u) {
-      size_t value = first_byte;
-      size_t multiplier = 256u;
-      if (not decoder.has(3)) {
-        raise(DecodeError::NOT_ENOUGH_DATA);
-      }
-      for (auto i = 0u; i < 3u; ++i) {
-        value += decoder.take() * multiplier;
-        multiplier <<= 8u;
-      }
-      value = value >> 2u;
-      if ((value >> 14) == 0) {
-        raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
-      }
-      integer = adjust(value);
-      return;
-    }
-
-    if (flag == 0b11) {
-      auto bytes_count = (first_byte >> 2u) + 4u;
-      if (not decoder.has(bytes_count)) {
-        raise(DecodeError::NOT_ENOUGH_DATA);
+    switch (flag) {
+      case 0b00u: {
+        auto value = static_cast<size_t>(first_byte >> 2u);
+        integer = adjust(value);
+        return;
       }
 
-      boost::multiprecision::uint1024_t multiplier{1u};
-      boost::multiprecision::uint1024_t value{0};
-      for (auto i = 0u; i < bytes_count; ++i) {
-        value += decoder.take() * multiplier;
-        multiplier <<= 8u;
+      case 0b01u: {
+        auto second_byte = decoder.take();
+        auto value = (static_cast<size_t>(first_byte & 0b11111100u)
+                      + static_cast<size_t>(second_byte) * 256u)
+                     >> 2u;
+        if ((value >> 6) == 0) {
+          raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+        }
+        integer = adjust(value);
+        return;
       }
-      if (value.is_zero()) {
-        raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+
+      case 0b10u: {
+        size_t value = first_byte;
+        size_t multiplier = 256u;
+        if (not decoder.has(3)) {
+          raise(DecodeError::NOT_ENOUGH_DATA);
+        }
+        for (auto i = 0u; i < 3u; ++i) {
+          value += decoder.take() * multiplier;
+          multiplier <<= 8u;
+        }
+        value = value >> 2u;
+        if ((value >> 14) == 0) {
+          raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+        }
+        integer = adjust(value);
+        return;
       }
-      auto bits = msb(value) + 1;
-      if (bits <= 30 or (bits + 7) / 8 < bytes_count) {
-        raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+
+      case 0b11: {
+        auto bytes_count = (first_byte >> 2u) + 4u;
+        if (not decoder.has(bytes_count)) {
+          raise(DecodeError::NOT_ENOUGH_DATA);
+        }
+
+        boost::multiprecision::uint1024_t multiplier{1u};
+        boost::multiprecision::uint1024_t value{0};
+        for (auto i = 0u; i < bytes_count; ++i) {
+          value += decoder.take() * multiplier;
+          multiplier <<= 8u;
+        }
+        if (value.is_zero()) {
+          raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+        }
+        auto bits = msb(value) + 1;
+        if (bits <= 30 or (bits + 7) / 8 < bytes_count) {
+          raise(DecodeError::REDUNDANT_COMPACT_ENCODING);
+        }
+        integer = adjust(value);
+        return;
       }
-      integer = adjust(value);
-      return;
+      default:
+        UNREACHABLE;
     }
-    UNREACHABLE
   }
 
 }  // namespace scale
