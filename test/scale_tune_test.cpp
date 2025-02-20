@@ -75,7 +75,7 @@ struct Object : private qtils::Empty {
   }
 
   friend void decode(Object &obj, Decoder &decoder) {
-    auto mul = decoder. getConfig<MulConfig>().multi;
+    auto mul = decoder.getConfig<MulConfig>().multi;
     auto add = decoder.getConfig<AddConfig>().add;
     size_t size;
     decode(as_compact(size), decoder);

@@ -104,7 +104,7 @@ namespace scale {
    * @param encoder SCALE encoder.
    */
   inline void encode(bool boolean, Encoder &encoder) {
-    encoder.put(boolean ? 1u : 0u);
+    encoder.put(boolean ? 1 : 0);
   }
 
   /**

@@ -78,7 +78,8 @@ namespace scale {
 
     // NOLINTNEXTLINE(*-pro-type-member-init)
     std::array<uint8_t, sizeof(size_t) + 1> bytes;
-    uint8_t &prefix = bytes[0] = 0;
+    uint8_t &prefix = bytes[0];
+    prefix = 0;
     size_t len = 1;
 
     for (decltype(value) i = value; i != 0; i >>= 8) {
