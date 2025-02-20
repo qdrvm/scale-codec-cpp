@@ -175,12 +175,10 @@ namespace scale {
     if (not decoder.has(sizeof(Integer))) {
       raise(DecodeError::NOT_ENOUGH_DATA);
     }
-    std::array<uint8_t, sizeof(Integer)> buff;
-    decoder.read({buff.data(), buff.size()});
-    integer =
-        boost::endian::endian_load<Integer,
-                                   sizeof(Integer),
-                                   boost::endian::order::little>(buff.data());
+    auto data = decoder.read(sizeof(Integer)).data();
+    integer = boost::endian::endian_load<Integer,
+                                         sizeof(Integer),
+                                         boost::endian::order::little>(data);
   }
 
   /**
@@ -191,9 +189,8 @@ namespace scale {
   void decode(BigInteger auto &integer, Decoder &decoder) {
     constexpr auto size =
         (std::numeric_limits<std::decay_t<decltype(integer)>>::digits + 1) / 8;
-    std::array<uint8_t, size> buff{};
-    decoder.read({buff.data(), buff.size()});
-    import_bits(integer, buff.begin(), buff.end(), 8, false);
+    auto slice = decoder.read(size);
+    import_bits(integer, slice.begin(), slice.end(), 8, false);
   }
 
 }  // namespace scale

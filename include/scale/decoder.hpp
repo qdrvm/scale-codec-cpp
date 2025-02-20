@@ -69,10 +69,12 @@ namespace scale {
     virtual uint8_t take() = 0;
 
     /**
-     * @brief Reads a span of bytes into the provided output buffer.
-     * @param out The span where the read bytes will be stored.
+     * @brief Reads the specified number of bytes and updates the internal
+     * buffer.
+     * @param amount Number of bytes to read.
+     * @return Span of the next required bytes.
      */
-    virtual void read(std::span<uint8_t> out) = 0;
+    virtual std::span<const uint8_t> read(size_t amount) = 0;
   };
 
   /**
