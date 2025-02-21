@@ -25,6 +25,7 @@
 #endif
 
 #include <scale/detail/tagged.hpp>
+#include <scale/optional_bool.hpp>
 #include <scale/outcome/outcome_throw.hpp>
 #include <scale/scale_error.hpp>
 #include <scale/types.hpp>
@@ -94,19 +95,19 @@ namespace scale {
      * @brief Concept for `optional<bool>`.
      */
     template <typename T>
-    concept OptionalBool = std::same_as<optional_value_type<T>, bool>;
+    concept IsOptionalBool = std::same_as<optional_value_type<T>, bool>;
 
     /**
      * @brief Concept for optional types excluding `optional<bool>`.
      */
     template <typename T>
     concept Optional =
-        (is_std_optional<T> or is_boost_optional<T>) and not OptionalBool<T>;
+        (is_std_optional<T> or is_boost_optional<T>) and not IsOptionalBool<T>;
 
   }  // namespace detail::optional
 
+  using detail::optional::IsOptionalBool;
   using detail::optional::Optional;
-  using detail::optional::OptionalBool;
 
   /**
    * @brief Encodes an `optional<bool>` value into SCALE format.
@@ -114,7 +115,7 @@ namespace scale {
    * @param opt_bool The `optional<bool>` to encode.
    * @param encoder The SCALE encoder.
    */
-  void encode(OptionalBool auto &&opt_bool, Encoder &encoder)
+  void encode(IsOptionalBool auto &&opt_bool, Encoder &encoder)
     requires NoTagged<decltype(opt_bool)>
   {
     if (opt_bool.has_value()) {
@@ -153,7 +154,7 @@ namespace scale {
    * @param opt_bool The `optional<bool>` to decode.
    * @param decoder The SCALE decoder.
    */
-  void decode(OptionalBool auto &opt_bool, Decoder &decoder)
+  void decode(IsOptionalBool auto &&opt_bool, Decoder &decoder)
     requires NoTagged<decltype(opt_bool)>
   {
     auto byte = decoder.take();

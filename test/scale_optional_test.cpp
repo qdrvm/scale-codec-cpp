@@ -11,6 +11,7 @@
 using scale::ByteArray;
 using scale::DecodeError;
 using scale::EncodeError;
+using scale::OptionalBool;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
 using Decoder = scale::backend::FromBytes;
@@ -149,20 +150,22 @@ TEST(Optional, DecodeFail) {
  * @then expected result obtained
  */
 TEST(OptionalBool, Encode) {
-  std::array<std::optional<bool>, 3> values = {std::nullopt, true, false};
-  ASSERT_OUTCOME_SUCCESS(encoded, encode(values));
-  ASSERT_EQ(encoded, (ByteArray{0, 1, 2}));
+  {
+    std::array<std::optional<bool>, 3> values = {std::nullopt, true, false};
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(values));
+    ASSERT_EQ(encoded, (ByteArray{0, 1, 2}));
+  }
+  {
+    std::array<boost::optional<bool>, 3> values = {boost::none, true, false};
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(values));
+    ASSERT_EQ(encoded, (ByteArray{0, 1, 2}));
+  }
+  {
+    std::array<OptionalBool, 3> values = {std::nullopt, true, false};
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(values));
+    ASSERT_EQ(encoded, (ByteArray{0, 1, 2}));
+  }
 }
-
-/**
- * @brief helper struct for testing decode optional bool
- */
-struct FourOptBools {
-  std::optional<bool> b1;
-  std::optional<bool> b2;
-  std::optional<bool> b3;
-  std::optional<bool> b4;
-};
 
 /**
  * @given byte array containing series of encoded optional bool values
@@ -173,7 +176,11 @@ struct FourOptBools {
 TEST(OptionalBool, DecodeFail) {
   auto bytes = ByteArray{0, 1, 2, 3};
 
-  ASSERT_OUTCOME_ERROR(decode<FourOptBools>(bytes),
+  ASSERT_OUTCOME_ERROR((decode<std::array<std::optional<bool>, 4>>(bytes)),
+                       DecodeError::UNEXPECTED_VALUE);
+  ASSERT_OUTCOME_ERROR((decode<std::array<boost::optional<bool>, 4>>(bytes)),
+                       DecodeError::UNEXPECTED_VALUE);
+  ASSERT_OUTCOME_ERROR((decode<std::array<OptionalBool, 4>>(bytes)),
                        DecodeError::UNEXPECTED_VALUE);
 }
 
@@ -185,11 +192,26 @@ TEST(OptionalBool, DecodeFail) {
 TEST(OptionalBool, DecodeSuccess) {
   auto bytes = ByteArray{0, 1, 2, 1};
 
-  ASSERT_OUTCOME_SUCCESS(res, decode<FourOptBools>(bytes));
-  ASSERT_TRUE(res.b1 == std::nullopt);
-  ASSERT_TRUE(res.b2 == true);
-  ASSERT_TRUE(res.b3 == false);
-  ASSERT_TRUE(res.b4 == true);
+  ASSERT_OUTCOME_SUCCESS(std_opt_bool,
+                         (decode<std::array<std::optional<bool>, 4>>(bytes)));
+  ASSERT_TRUE(std_opt_bool[0] == std::nullopt);
+  ASSERT_TRUE(std_opt_bool[1] == true);
+  ASSERT_TRUE(std_opt_bool[2] == false);
+  ASSERT_TRUE(std_opt_bool[3] == true);
+
+  ASSERT_OUTCOME_SUCCESS(boost_opt_bool,
+                         (decode<std::array<boost::optional<bool>, 4>>(bytes)));
+  ASSERT_TRUE(boost_opt_bool[0] == boost::none);
+  ASSERT_TRUE(boost_opt_bool[1] == true);
+  ASSERT_TRUE(boost_opt_bool[2] == false);
+  ASSERT_TRUE(boost_opt_bool[3] == true);
+
+  ASSERT_OUTCOME_SUCCESS(opt_bool,
+                         (decode<std::array<OptionalBool, 4>>(bytes)));
+  ASSERT_TRUE(opt_bool[0] == std::nullopt);
+  ASSERT_TRUE(opt_bool[1] == true);
+  ASSERT_TRUE(opt_bool[2] == false);
+  ASSERT_TRUE(opt_bool[3] == true);
 }
 
 /**
