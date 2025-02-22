@@ -76,8 +76,8 @@ namespace scale::impl {
      * @return A result containing the decoded value or an error.
      */
     template <typename T>
-    outcome::result<T> decode(backend::ByteSource auto bytes) {
-      backend::FromBytes<decltype(bytes)> decoder{bytes};
+    outcome::result<T> decode(backend::ByteSource auto &&bytes) {
+      backend::FromBytes<decltype(bytes)> decoder(bytes);
       T value{};
       try {
         decode(value, decoder);
