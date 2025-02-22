@@ -37,7 +37,7 @@ TEST(Optional, Encode) {
 
   // encode negative int8_t
   {
-    ASSERT_OUTCOME_SUCCESS(encoded, encode(std::optional<uint8_t>{-1}));
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(std::optional<int8_t>{-1}));
     ASSERT_EQ(encoded, (ByteArray{1, 255}));
   }
 
