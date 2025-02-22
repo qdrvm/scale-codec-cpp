@@ -29,13 +29,14 @@ using scale::impl::memory::encode;
 template <typename T, typename... Configs>
 outcome::result<std::vector<uint8_t>> encode_with_config(T &&value,
                                                          Configs &&...configs) {
-  ToBytes encoder(std::forward<Configs>(configs)...);
+  std::vector<uint8_t> out;
+  ToBytes encoder(out, std::forward<Configs>(configs)...);
   try {
     encode(std::forward<T>(value), encoder);
   } catch (std::system_error &e) {
     return outcome::failure(e.code());
   }
-  return std::move(encoder).to_vector();
+  return std::move(out);
 }
 
 template <typename T, typename... Configs>

@@ -93,6 +93,31 @@ namespace scale::backend {
     explicit FromBytes(const In &data) : in_(to_view(data)), it_(in_.begin()) {}
 
     /**
+     * @brief Constructs a FromBytes decoder with an input byte span and
+     * additional configurations.
+     * @param data The input data buffer to decode from.
+     * @param args Additional configuration parameters.
+     */
+    template <typename... Args>
+    FromBytes(const In &data, const Args &...args)
+        : Decoder(args...), in_(to_view(data)), it_(in_.begin()) {}
+
+    /// @brief Deleted default constructor to ensure container is passed.
+    FromBytes() = delete;
+
+    /// @brief Deleted move constructor.
+    FromBytes(FromBytes &&) noexcept = delete;
+
+    /// @brief Deleted copy constructor.
+    FromBytes(const FromBytes &) = delete;
+
+    /// @brief Deleted move assignment operator.
+    FromBytes &operator=(FromBytes &&) noexcept = delete;
+
+    /// @brief Deleted copy assignment operator.
+    FromBytes &operator=(const FromBytes &) = delete;
+
+    /**
      * @brief Checks if the data source is a continuous range.
      *
      * This method uses std::ranges::contiguous_range to determine if the

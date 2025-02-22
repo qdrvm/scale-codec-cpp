@@ -103,6 +103,15 @@ namespace scale::backend {
      */
     explicit ToBytes(Out &container) : out_(container) {}
 
+    /**
+     * @brief Constructs a ToBytes encoder with optional configuration.
+     * @tparam Args Variadic template parameters for configuration.
+     * @param args Configuration arguments.
+     */
+    template <typename... Args>
+    ToBytes(Out &container, Args &&...args)
+        : Encoder(std::forward<Args>(args)...), out_(container){};
+
     /// @brief Deleted default constructor to ensure container is passed.
     ToBytes() = delete;
 
