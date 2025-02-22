@@ -30,8 +30,8 @@ using scale::DecodeError;
 using scale::SmallBitVector;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::backend::ToBytes;
-using Decoder = scale::backend::FromBytes;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 TEST(Decomposable, Empty) {
   using Testee = qtils::Empty;
@@ -98,8 +98,6 @@ TEST(Decomposable, Tie) {
   uint8_t dst1 = 0;
   const uint16_t dst2 = 0;
 
-  Encoder encoder;
-  ASSERT_NO_THROW(encode(std::tie(src1, src2), encoder));
   ASSERT_OUTCOME_SUCCESS(encoded, encode(std::tie(src1, src2)));
 
   Decoder decoder{encoded};

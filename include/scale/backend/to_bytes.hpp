@@ -15,77 +15,181 @@
 
 #pragma once
 
-#include <scale/encoder.hpp>
+#include <cstdint>
+#include <ranges>
+#include <span>
+#include <type_traits>
 
-#include <deque>
+#include <scale/encoder.hpp>
 
 namespace scale::backend {
 
   /**
-   * @class ToBytes
-   * @brief Encoder backend that accumulates bytes into a deque.
+   * @brief Concept to check if a container supports byte insertion at the end.
+   *
+   * This concept ensures that the container type supports:
+   * - `push_back(uint8_t)` for adding a single byte at the end.
+   * - `insert(iterator, iterator)` for inserting a range of bytes at the end.
+   *
+   * The container must:
+   * - Be a template with `uint8_t` as the value type.
+   * - Support `push_back(uint8_t)`.
+   * - Support `insert(container.end(), begin, end)` for a range of iterators.
+   *
+   * Containers that typically satisfy this concept:
+   * - `std::vector<uint8_t>`
+   * - `std::deque<uint8_t>`
+   * - `std::list<uint8_t>`
+   *
+   * This concept is used to ensure that `ToBytes` can efficiently add bytes
+   * to the end of the container.
+   *
+   * @tparam T Template type of the container.
    */
+  template <template <typename...> typename T>
+  concept ByteReceiver = requires(
+      T<uint8_t> &container, uint8_t byte, std::span<const uint8_t> span) {
+    { container.push_back(byte) } -> std::same_as<void>;
+    {
+      container.insert(container.end(), span.begin(), span.end())
+    } -> std::same_as<typename T<uint8_t>::iterator>;
+  };
+
+  /**
+   * @class ToBytes
+   * @brief Encoder backend that accumulates bytes into a container of uint8_t.
+   *
+   * This class is designed to efficiently add bytes to the end of a container,
+   * supporting both single bytes and sequences of bytes. It provides an
+   * abstraction for byte encoding that is compatible with various standard
+   * library containers.
+   *
+   * The container type `Container` is restricted by the `ByteReceiver` concept,
+   * which ensures the container:
+   * - Supports `push_back(uint8_t)` for single bytes.
+   * - Supports `insert(container.end(), begin, end)` for sequences of bytes.
+   * - Is templated with `uint8_t` as the value type.
+   *
+   * Containers that typically satisfy this requirement:
+   * - `std::vector<uint8_t>`
+   * - `std::deque<uint8_t>`
+   * - `std::list<uint8_t>`
+   *
+   * This class automatically instantiates the container with `uint8_t` as
+   * the value type, providing an efficient and flexible way to accumulate
+   * bytes.
+   *
+   * @tparam Container The type of container to accumulate bytes into.
+   *                   Defaults to std::vector.
+   */
+  template <template <typename...> typename Container = std::vector>
+    requires ByteReceiver<Container>
   class ToBytes final : public Encoder {
    public:
+    using Byte = uint8_t;         ///< Alias for the byte type.
+    using Out = Container<Byte>;  ///< Type of the output container.
+
     /**
-     * @brief Constructs a ToBytes encoder with optional configuration.
-     * @tparam Args Variadic template parameters for configuration.
-     * @param args Configuration arguments.
+     * @brief Constructs a ToBytes encoder with a reference to the output
+     * container.
+     *
+     * The reference is stored without copying, ensuring that all encoded bytes
+     * are directly added to the provided container.
+     *
+     * @param container Reference to the container where bytes will be added.
+     *
+     * @note The container must outlive the ToBytes object to avoid dangling
+     * references.
      */
-    template <typename... Args>
-    ToBytes(Args &&...args) : Encoder(std::forward<Args>(args)...){};
+    explicit ToBytes(Out &container) : out_(container) {}
 
-    /// @brief Default constructor.
-    ToBytes() = default;
+    /// @brief Deleted default constructor to ensure container is passed.
+    ToBytes() = delete;
 
+    /// @brief Deleted move constructor.
     ToBytes(ToBytes &&) noexcept = delete;
+
+    /// @brief Deleted copy constructor.
     ToBytes(const ToBytes &) = delete;
+
+    /// @brief Deleted move assignment operator.
     ToBytes &operator=(ToBytes &&) noexcept = delete;
-    ToBytes &operator=(ToBytes const &) = delete;
+
+    /// @brief Deleted copy assignment operator.
+    ToBytes &operator=(const ToBytes &) = delete;
+
+    /**
+     * @brief Checks if the data receiver is a continuous range.
+     *
+     * This method uses std::ranges::contiguous_range to determine if the
+     * underlying data is stored contiguously in memory.
+     *
+     * @return true if the data receiver is contiguous, false otherwise.
+     */
+    [[nodiscard]] constexpr bool isContinuousReceiver() const override {
+      return std::ranges::contiguous_range<decltype(out_)>;
+    }
 
     /**
      * @brief Adds a single byte to the encoded buffer.
+     *
+     * This method appends a single byte to the end of the output container.
+     * It utilizes `push_back(uint8_t)` to efficiently add the byte.
+     *
      * @param byte The byte to be added.
      */
     void put(uint8_t byte) override {
-      bytes_.push_back(byte);
+      out_.push_back(byte);
     }
 
     /**
      * @brief Writes a sequence of bytes to the encoded buffer.
+     *
+     * This method appends a sequence of bytes from the given span to the end
+     * of the output container. It uses `insert` with iterators from the span
+     * for optimal insertion.
+     *
      * @param bytes Span of bytes to write.
+     *
+     * @note If the container is contiguous (e.g., std::vector), the bytes
+     *       are added in one contiguous block for efficiency.
      */
     void write(std::span<const uint8_t> bytes) override {
-      bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
+      out_.insert(out_.end(), bytes.begin(), bytes.end());
     }
 
     /**
      * @brief Retrieves the size of the encoded buffer.
-     * @return The number of bytes currently stored.
+     *
+     * This method returns the number of bytes currently stored in the output
+     * container.
+     *
+     * @return The number of bytes in the encoded buffer.
      */
     [[nodiscard]] size_t size() const override {
-      return bytes_.size();
+      return out_.size();
     }
 
     /**
-     * @brief Returns a copy of the stored bytes as a vector.
-     * @return A vector containing all stored bytes.
+     * @brief Provides a view of the stored bytes as a range.
+     *
+     * If the container is contiguous (e.g., std::vector or std::deque),
+     * this method returns a `std::span<const uint8_t>` pointing to the stored
+     * bytes. Otherwise, it returns a `std::ranges::subrange` for non-contiguous
+     * containers (e.g., std::list).
+     *
+     * @return A view of the stored bytes.
      */
-    [[nodiscard]] std::vector<uint8_t> to_vector() const & {
-      return {bytes_.begin(), bytes_.end()};
-    }
-
-    /**
-     * @brief Moves the stored bytes into a vector.
-     * @return A vector containing all stored bytes.
-     */
-    [[nodiscard]] std::vector<uint8_t> to_vector() && {
-      return {std::make_move_iterator(bytes_.begin()),
-              std::make_move_iterator(bytes_.end())};
+    [[nodiscard]] auto view() const {
+      if constexpr (std::ranges::contiguous_range<Out>) {
+        return std::span<const uint8_t>(out_.data(), out_.size());
+      } else {
+        return std::ranges::subrange(out_.begin(), out_.end());
+      }
     }
 
    private:
-    std::deque<uint8_t> bytes_;  ///< Internal storage for encoded bytes.
+    Out &out_;  ///< Reference to the container for encoded bytes.
   };
 
 }  // namespace scale::backend

@@ -175,10 +175,20 @@ namespace scale {
     if (not decoder.has(sizeof(Integer))) {
       raise(DecodeError::NOT_ENOUGH_DATA);
     }
-    auto data = decoder.read(sizeof(Integer)).data();
-    integer = boost::endian::endian_load<Integer,
-                                         sizeof(Integer),
-                                         boost::endian::order::little>(data);
+    if (decoder.isContinuousSource()) {
+      auto data = decoder.read(sizeof(Integer));
+      integer =
+          boost::endian::endian_load<Integer,
+                                     sizeof(Integer),
+                                     boost::endian::order::little>(data.data());
+    } else {
+      std::array<uint8_t, sizeof(Integer)> data;
+      decoder.read(data);
+      integer =
+          boost::endian::endian_load<Integer,
+                                     sizeof(Integer),
+                                     boost::endian::order::little>(data.data());
+    }
   }
 
   /**
@@ -189,8 +199,14 @@ namespace scale {
   void decode(BigInteger auto &integer, Decoder &decoder) {
     constexpr auto size =
         (std::numeric_limits<std::decay_t<decltype(integer)>>::digits + 1) / 8;
-    auto slice = decoder.read(size);
-    import_bits(integer, slice.begin(), slice.end(), 8, false);
+    if (decoder.isContinuousSource()) {
+      auto data = decoder.read(size);
+      import_bits(integer, data.begin(), data.end(), 8, false);
+    } else {
+      std::array<uint8_t, size> data;
+      decoder.read(data);
+      import_bits(integer, data.begin(), data.end(), 8, false);
+    }
   }
 
 }  // namespace scale

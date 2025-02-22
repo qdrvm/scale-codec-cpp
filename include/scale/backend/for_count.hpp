@@ -36,6 +36,13 @@ namespace scale::backend {
     ForCount &operator=(ForCount const &) = delete;
 
     /**
+     * @node Does not matter here. Implemented to follow interface
+     */
+    [[nodiscard]] constexpr bool isContinuousReceiver() const override {
+      return true;
+    }
+
+    /**
      * @brief Increments the byte count by one.
      * @param byte The byte to be counted (not stored).
      */

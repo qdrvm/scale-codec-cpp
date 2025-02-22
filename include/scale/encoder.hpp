@@ -52,6 +52,16 @@ namespace scale {
     virtual ~Encoder() = default;
 
     /**
+     * @brief Checks if the data receiver is a continuous range.
+     *
+     * This method uses std::ranges::contiguous_range to determine if the
+     * underlying data is stored contiguously in memory.
+     *
+     * @return true if the data receiver is contiguous, false otherwise.
+     */
+    [[nodiscard]] virtual constexpr bool isContinuousReceiver() const = 0;
+
+    /**
      * @brief Writes a single byte to the backend.
      * @param byte The byte to be written.
      */

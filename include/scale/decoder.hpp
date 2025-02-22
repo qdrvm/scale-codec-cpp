@@ -56,6 +56,12 @@ namespace scale {
     virtual ~Decoder() = default;
 
     /**
+     * @brief Checks if the data source is a continuous range.
+     * @return true if the data source is contiguous, false otherwise.
+     */
+    virtual bool isContinuousSource() const = 0;
+
+    /**
      * @brief Checks whether n more bytes are available.
      * @param amount Number of bytes to check.
      * @return True if amount bytes are available, false otherwise.
@@ -75,6 +81,12 @@ namespace scale {
      * @return Span of the next required bytes.
      */
     virtual std::span<const uint8_t> read(size_t amount) = 0;
+
+    /**
+     * @brief Reads bytes to the provided span
+     * @param out Span of receiving bytes.
+     */
+    virtual void read(std::span<uint8_t> out) = 0;
   };
 
   /**

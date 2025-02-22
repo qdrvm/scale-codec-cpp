@@ -14,8 +14,8 @@ using scale::ByteArray;
 using scale::get_variant;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::backend::ToBytes;
-using Decoder = scale::backend::FromBytes;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 using Testee = std::variant<uint8_t, uint32_t>;
 

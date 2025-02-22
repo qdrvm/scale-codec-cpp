@@ -14,7 +14,7 @@ using scale::EncodeError;
 using scale::OptionalBool;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Decoder = scale::backend::FromBytes;
+using Decoder = scale::backend::FromBytes<>;
 
 /**
  * @given variety of optional values

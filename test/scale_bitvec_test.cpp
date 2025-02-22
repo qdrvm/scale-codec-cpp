@@ -21,8 +21,8 @@ using scale::DecodeError;
 using scale::SmallBitVector;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::backend::ToBytes;
-using Decoder = scale::backend::FromBytes;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 TEST(BitVector, SmallBitVector) {
   using SBV = SmallBitVector<>;

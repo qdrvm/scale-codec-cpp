@@ -20,8 +20,8 @@ using scale::DecodeError;
 using scale::SmallBitVector;
 using scale::impl::memory::decode;
 using scale::impl::memory::encode;
-using Encoder = scale::backend::ToBytes;
-using Decoder = scale::backend::FromBytes;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 /**
  * @given collection of 80 items of type uint8_t
@@ -43,6 +43,16 @@ TEST(CollectionTest, encodeCollectionOf80) {
 
     ASSERT_EQ(out, match);
   }
+}
+
+TEST(CollectionTest, encodeDecodeArray) {
+  std::array<uint8_t, 32> collection;
+  for (auto i = 0; i < collection.size(); ++i) {
+    collection[i] = i % 256;
+  }
+
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, (decode<std::array<uint8_t, 32>>(encoded)));
 }
 
 /**

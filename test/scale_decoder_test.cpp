@@ -10,8 +10,8 @@
 
 using scale::ByteArray;
 using scale::DecodeError;
-using Encoder = scale::backend::ToBytes;
-using Decoder = scale::backend::FromBytes;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 /**
  * @given byte array of 3 items: 0, 1, 2
