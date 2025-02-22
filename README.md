@@ -1,21 +1,22 @@
 # SCALE codec C++ implementation
-**SCALE (Simple Concatenated Aggregate Little-Endian) is a lightweight serialization format commonly used in blockchain applications.**
+**SCALE (Simple Concatenated Aggregate Little-Endian)** is a lightweight serialization format commonly used in blockchain applications.
+More details in [spec](https://docs.polkadot.com/polkadot-protocol/basics/data-encoding/#scale-codec) from Polkadot.
 
 It allows encoding and decoding following data types:
 * Built-in integer types specified by size:
-  * ```uint8_t```
-  * ```uint16_t```
-  * ```uint32_t```
-  * ```uint64_t```
+  * ```uint8_t```, ```int8_t```
+  * ```uint16_t```, ```int16_t```
+  * ```uint32_t```, ```int32_t```
+  * ```uint64_t```, ```int64_t```
 * Multiprecision integer from boost:
-  * ```uint128_t```
-  * ```uint256_t```
-  * ```uint512_t```
-  * ```uint1024_t```
+  * ```uint128_t```, ```int128_t```
+  * ```uint256_t```, ```int256_t```
+  * ```uint512_t```, ```int512_t```
+  * ```uint1024_t```, ```int1024_t```
 * boolean values
 * pairs, tuples and other structurally bindable types (limited by N members)
 * aggregates limited by N field (except array, that coded as collection)
-* compact integers represented by CompactInteger type (classic ans JAM-compatible)
+* compact integers represented by CompactInteger type (classic and JAM-compatible). **Unsigned only!**
 * optional values represented by ```std::optional<T>``` and ```boost::optional<T>```
   * as special case of optional values ```*::optional<bool>``` is encoded using one byte following specification.
 * various collections of items
@@ -42,7 +43,8 @@ Additionally it initialize provided values over `>>` operator.
 
 ## Example 
 ```c++
-ToBytes encoder; // Encoder which used backend 'to bytes'
+std::vector<uint8_t> out;
+ToBytes encoder(out); // Encoder which used backend 'to bytes'
 
 uint32_t ui32 = 123u;
 uint8_t ui8 = 234u;
@@ -75,11 +77,11 @@ try {
 ```
 You can now get encoded data:
 ```c++
-ByteArray data = encoder.backend().to_vector();
+auto in = out;;
 ```
 Now you can decode that data back:
 ```c++
-FromBytes decoder(data); // Decoder which used backend 'from bytes'
+FromBytes decoder(in); // Decoder which used backend 'from bytes'
 
 uint32_t ui32 = 0u;
 uint8_t ui8 = 0u;
@@ -128,15 +130,17 @@ struct MyType {
 ```
 Now you can use them in collections, optionals and variants
 ```c++
+std::vector<uint8_t> out;
+EncoderToVector encoder(out)
 std::vector<MyType> src_vec = {{1, "asd"}, {2, "qwe"}};
 try { 
-  encode << src_vec;
+  encoder << src_vec;
 } catch (...) {
   // handle error
 }
-ByteArray data = encoder.backend().to_vector();
 
-FromBytes decoder(data);
+std::vector<uint8_t> in = {...};
+DecoderFromSpan decoder(in);
 std::vector<MyType> dst_vec;
 try {
   decode(dst, decoder);
@@ -169,10 +173,11 @@ if (res.has_value()) {
   SomeClass object = std::move(res.value()); // Decoded value
 }
 
-using ::scale::impl::bytes::EncoderToBytes;
+using ::scale::impl::bytes::EncoderToVector;
 
 SomeClass object = {...};
-EncoderToBytes encoder;
+std::vector<uint8_t> out;
+EncoderToVector encoder;
 try {
     encoder << object;
     // or encode(object, decoder);
@@ -181,8 +186,8 @@ try {
 
 using ::scale::impl::bytes::DecoderFromBytes;
 
-BytesArray data = {...};
-DecoderFromBytes decoder(data);
+BytesArray in = {...};
+DecoderFromSpan decoder(in);
 try {
     Object object;
     decoder >> object;
