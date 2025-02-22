@@ -46,14 +46,14 @@ namespace scale::backend {
    *
    * @tparam T Template type of the container.
    */
-  template <template <typename...> typename T>
-  concept ByteReceiver = requires(
-      T<uint8_t> &container, uint8_t byte, std::span<const uint8_t> span) {
-    { container.push_back(byte) } -> std::same_as<void>;
-    {
-      container.insert(container.end(), span.begin(), span.end())
-    } -> std::same_as<typename T<uint8_t>::iterator>;
-  };
+  template <typename T>
+  concept ByteReceiver =
+      requires(T &container, uint8_t byte, std::span<const uint8_t> span) {
+        { container.push_back(byte) } -> std::same_as<void>;
+        {
+          container.insert(container.end(), span.begin(), span.end())
+        } -> std::same_as<typename T::iterator>;
+      };
 
   /**
    * @class ToBytes
@@ -61,34 +61,18 @@ namespace scale::backend {
    *
    * This class is designed to efficiently add bytes to the end of a container,
    * supporting both single bytes and sequences of bytes. It provides an
-   * abstraction for byte encoding that is compatible with various standard
-   * library containers.
-   *
-   * The container type `Container` is restricted by the `ByteReceiver` concept,
-   * which ensures the container:
-   * - Supports `push_back(uint8_t)` for single bytes.
-   * - Supports `insert(container.end(), begin, end)` for sequences of bytes.
-   * - Is templated with `uint8_t` as the value type.
-   *
-   * Containers that typically satisfy this requirement:
+   * abstraction for byte encoding that is compatible with the following
+   * containers:
    * - `std::vector<uint8_t>`
    * - `std::deque<uint8_t>`
    * - `std::list<uint8_t>`
    *
-   * This class automatically instantiates the container with `uint8_t` as
-   * the value type, providing an efficient and flexible way to accumulate
-   * bytes.
-   *
-   * @tparam Container The type of container to accumulate bytes into.
-   *                   Defaults to std::vector.
+   * @tparam Out The exact type of the container to accumulate bytes into.
    */
-  template <template <typename...> typename Container = std::vector>
-    requires ByteReceiver<Container>
+  template <typename Out = std::vector<uint8_t>>
+    requires ByteReceiver<Out>
   class ToBytes final : public Encoder {
    public:
-    using Byte = uint8_t;         ///< Alias for the byte type.
-    using Out = Container<Byte>;  ///< Type of the output container.
-
     /**
      * @brief Constructs a ToBytes encoder with a reference to the output
      * container.

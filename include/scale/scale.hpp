@@ -38,7 +38,7 @@ namespace scale::impl {
    * @brief Memory-based implementation of SCALE encoding and decoding.
    */
   namespace memory {
-    using EncoderToVector = backend::ToBytes<std::vector>;
+    using EncoderToVector = backend::ToBytes<std::vector<uint8_t>>;
 
     /**
      * @brief Encodes a value using SCALE encoding.
@@ -47,10 +47,10 @@ namespace scale::impl {
      * @param value The value to encode.
      * @return A result containing the encoded byte vector or an error.
      */
-    template <template <typename...> typename Out, typename T>
+    template <typename Out, typename T>
       requires backend::ByteReceiver<Out>
-    outcome::result<Out<uint8_t>> encode(T &&value) {
-      Out<uint8_t> out;
+    outcome::result<Out> encode(T &&value) {
+      Out out;
       backend::ToBytes<Out> encoder(out);
       try {
         // Allways send encoding value by const-lvalue-reference
@@ -63,10 +63,10 @@ namespace scale::impl {
 
     template <typename T>
     inline auto encode(T &&value) {
-      return encode<std::vector>(std::forward<T>(value));
+      return encode<std::vector<uint8_t>>(std::forward<T>(value));
     }
 
-    using DecoderFromBytes = backend::FromBytes<std::span<const uint8_t>>;
+    using DecoderFromSpan = backend::FromBytes<std::span<const uint8_t>>;
 
     /**
      * @brief Decodes a value using SCALE decoding.
