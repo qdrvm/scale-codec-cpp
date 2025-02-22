@@ -43,6 +43,12 @@ namespace scale {
                                    std::vector<bool>>)
   {
     encode(as_compact(collection.size()), encoder);
+    if constexpr (std::same_as<
+                      std::remove_cvref_t<decltype(*std::begin(collection))>,
+                      uint8_t>) {
+      encoder.write(collection);
+      return;
+    }
     for (auto &&item : std::forward<decltype(collection)>(collection)) {
       encode(std::as_const(item), encoder);
     }
@@ -57,6 +63,12 @@ namespace scale {
     requires NoTagged<decltype(collection)>
              and (not DecomposableArray<decltype(collection)>)
   {
+    if constexpr (std::same_as<
+                      std::remove_cvref_t<decltype(*std::begin(collection))>,
+                      uint8_t>) {
+      encoder.write(collection);
+      return;
+    }
     for (auto &&item : std::forward<decltype(collection)>(collection)) {
       encode(std::as_const(item), encoder);
     }
@@ -111,6 +123,15 @@ namespace scale {
 
     auto &mutable_collection = reinterpret_cast<MutableCollection &>(
         const_cast<Collection &>(collection));
+
+    if constexpr (std::same_as<std::remove_cvref_t<decltype(*std::begin(
+                                   mutable_collection))>,
+                               uint8_t>) {
+      if (decoder.isContinuousSource()) {
+        decoder.read(mutable_collection);
+        return;
+      }
+    }
     for (decltype(auto) item : mutable_collection) {
       decode(item, decoder);
     }
@@ -174,6 +195,14 @@ namespace scale {
       raise(DecodeError::TOO_MANY_ITEMS);
     }
 
+    if constexpr (std::same_as<std::remove_cvref_t<decltype(*std::begin(
+                                   mutable_collection))>,
+                               uint8_t>) {
+      if (decoder.isContinuousSource()) {
+        decoder.read(mutable_collection);
+        return;
+      }
+    }
     for (decltype(auto) item : mutable_collection) {
       decode(item, decoder);
     }
