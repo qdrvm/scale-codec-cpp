@@ -194,6 +194,9 @@ namespace scale::backend {
      * @throws DecodeError::NOT_ENOUGH_DATA if not enough bytes are available.
      */
     void read(std::span<uint8_t> out) override {
+      [[unlikely]] if (out.empty()) {
+        return;
+      }
       if (!has(out.size())) {
         raise(DecodeError::NOT_ENOUGH_DATA);
       }
