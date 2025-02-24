@@ -5,19 +5,18 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <qtils/test/outcome.hpp>
+
 #include <scale/scale.hpp>
 
-using scale::decode;
-using scale::encode;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 struct TestStruct {
   std::string a;
   int b;
-
-  inline bool operator==(const TestStruct &rhs) const {
-    return a == rhs.a && b == rhs.b;
-  }
+  bool operator==(const TestStruct &other) const = default;
 };
 
 /**

@@ -5,6 +5,8 @@
  */
 
 #include <gtest/gtest.h>
+#include <qtils/empty.hpp>
+#include <qtils/test/outcome.hpp>
 #include <scale/definitions.hpp>
 #include <scale/scale.hpp>
 
@@ -13,13 +15,42 @@
     "This file should not be compiled, because custom config support is not enabed"
 #endif
 
+using scale::as_compact;
 using scale::ByteArray;
 using scale::Compact;
-using scale::decode;
-using scale::encode;
-using scale::Length;
-using scale::ScaleDecoderStream;
-using scale::ScaleEncoderStream;
+using scale::ConstSpanOfBytes;
+using scale::Decoder;
+using scale::Encoder;
+using scale::backend::FromBytes;
+using scale::backend::ToBytes;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
+
+template <typename T, typename... Configs>
+outcome::result<std::vector<uint8_t>> encode_with_config(T &&value,
+                                                         Configs &&...configs) {
+  std::vector<uint8_t> out;
+  ToBytes encoder(out, std::forward<Configs>(configs)...);
+  try {
+    encode(std::forward<T>(value), encoder);
+  } catch (std::system_error &e) {
+    return outcome::failure(e.code());
+  }
+  return std::move(out);
+}
+
+template <typename T, typename... Configs>
+outcome::result<T> decode_with_config(ConstSpanOfBytes bytes,
+                                      Configs &&...configs) {
+  FromBytes decoder(bytes, std::forward<Configs>(configs)...);
+  T value;
+  try {
+    decode(value, decoder);
+  } catch (std::system_error &e) {
+    return outcome::failure(e.code());
+  }
+  return std::move(value);
+}
 
 struct MulConfig {
   uint8_t multi;
@@ -28,37 +59,36 @@ struct AddConfig {
   uint8_t add;
 };
 
-struct Object {
+struct Object : private qtils::Empty {
   std::vector<uint8_t> buff;
 
   bool operator==(const Object &) const = default;
 
-  friend ScaleEncoderStream &operator<<(ScaleEncoderStream &s,
-                                        const Object &x) {
-    auto mul = s.getConfig<MulConfig>().multi;
-    auto add = s.getConfig<AddConfig>().add;
+  friend void encode(const Object &obj, Encoder &encoder) {
+    auto mul = encoder.template getConfig<MulConfig>().multi;
+    auto add = encoder.template getConfig<AddConfig>().add;
 
-    s << Length(x.buff.size());
-    for (uint8_t i : x.buff) {
+    encode(as_compact(obj.buff.size()), encoder);
+    for (uint8_t i : obj.buff) {
       uint8_t x = i * mul + add;
-      s << x;
+      encoder.put(x);
     }
-    return s;
   }
 
-  friend ScaleDecoderStream &operator>>(ScaleDecoderStream &s, Object &x) {
-    auto mul = s.getConfig<MulConfig>().multi;
-    auto add = s.getConfig<AddConfig>().add;
-    Length size;
-    s >> size;
-    x.buff.resize(untagged(size));
-    for (uint8_t &i : x.buff) {
-      uint8_t x;
-      s >> x;
+  friend void decode(Object &obj, Decoder &decoder) {
+    auto mul = decoder.getConfig<MulConfig>().multi;
+    auto add = decoder.getConfig<AddConfig>().add;
+    size_t size;
+    decode(as_compact(size), decoder);
+    obj.buff.resize(size);
+    for (uint8_t &i : obj.buff) {
+      uint8_t x = decoder.take();
       i = (x - add) / mul;
     }
-    return s;
   }
+
+ private:
+  int x = 0;
 };
 
 TEST(CustomConfig, SunnyDayScenario) {
@@ -68,22 +98,28 @@ TEST(CustomConfig, SunnyDayScenario) {
   AddConfig add_twelve{12};
 
   // Encoding
-  Object object{.buff = {3, 6, 9}};
-  ScaleEncoderStream encoder(mul_two, add_twelve);
-  encoder << object;  // X * 2 + 12
-  auto encoded = encoder.to_vector();
+  Object object;
+  object.buff = {3, 6, 9};
+
+  // X * 2 + 12
+  ASSERT_OUTCOME_SUCCESS(  //
+      encoded,
+      encode_with_config(object, mul_two, add_twelve));
 
   // Check encoding
-  ScaleDecoderStream s(encoded);
-  std::vector<uint8_t> buff1;
-  s >> buff1;
-  std::vector<uint8_t> buff2 = {18, 24, 30};
-  ASSERT_EQ(buff1, buff2) << "Incorrect encoded";
+  {
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<std::vector<uint8_t>>(encoded));
+    std::vector<uint8_t> expected = {18, 24, 30};
+    ASSERT_EQ(decoded, expected) << "Incorrect encoded";
+  }
 
   // Decode and check it
-  ScaleDecoderStream decoder(encoded, mul_three, add_six);
-  Object object1;
-  decoder >> object1;
-  Object object2{.buff = {4, 6, 8}};
-  ASSERT_EQ(object1, object2) << "Incorrect decoded";
+  {
+    ASSERT_OUTCOME_SUCCESS(  //
+        decoded,
+        decode_with_config<Object>(encoded, mul_three, add_six));
+    Object expected;
+    expected.buff = {4, 6, 8};
+    ASSERT_EQ(decoded, expected) << "Incorrect decoded";
+  }
 }

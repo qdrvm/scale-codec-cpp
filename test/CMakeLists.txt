@@ -48,10 +48,10 @@ endfunction()
 # for tests' XML reports
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/xunit)
 
-addtest(scale_decoder_stream_test
-    scale_decoder_stream_test.cpp
+addtest(scale_decoder_test
+    scale_decoder_test.cpp
 )
-target_link_libraries(scale_decoder_stream_test
+target_link_libraries(scale_decoder_test
     scale
 )
 
@@ -59,13 +59,13 @@ addtest(scale_encode_append_test
     scale_encode_append_test.cpp
 )
 target_link_libraries(scale_encode_append_test
-    scale
+    scale_append
 )
 
-addtest(scale_compact_test
-    scale_compact_test.cpp
+addtest(scale_compact_integer_test
+    scale_compact_integer_test.cpp
 )
-target_link_libraries(scale_compact_test
+target_link_libraries(scale_compact_integer_test
     scale
 )
 
@@ -76,10 +76,10 @@ target_link_libraries(scale_enum_test
     scale
 )
 
-addtest(scale_fixed_test
-    scale_fixed_test.cpp
+addtest(scale_fixed_integer_test
+    scale_fixed_integer_test.cpp
 )
-target_link_libraries(scale_fixed_test
+target_link_libraries(scale_fixed_integer_test
     scale
 )
 
@@ -104,18 +104,17 @@ target_link_libraries(scale_collection_test
     scale
 )
 
-addtest(scale_variant_test
+addtest(scale_std_variant_test
     scale_std_variant_test.cpp
-    scale_boost_variant_test.cpp
-)
-target_link_libraries(scale_variant_test
+ )
+target_link_libraries(scale_std_variant_test
     scale
 )
 
-addtest(scale_pair_test
-    scale_pair_test.cpp
+addtest(scale_boost_variant_test
+    scale_boost_variant_test.cpp
 )
-target_link_libraries(scale_pair_test
+target_link_libraries(scale_boost_variant_test
     scale
 )
 
@@ -133,13 +132,6 @@ target_link_libraries(scale_convenience_functions_test
     scale
 )
 
-addtest(scale_tuple_test
-    scale_tuple_test.cpp
-)
-target_link_libraries(scale_tuple_test
-    scale
-)
-
 addtest(scale_array_test
     scale_array_test.cpp
 )
@@ -154,10 +146,31 @@ target_link_libraries(scale_encode_counter_test
     scale
 )
 
-addtest(scale_custom_decomposing_test
-    scale_custom_decomposing_test.cpp
+addtest(scale_sptr_and_refs_test
+    scale_sptr_and_refs_test.cpp
 )
-target_link_libraries(scale_custom_decomposing_test
+target_link_libraries(scale_sptr_and_refs_test
+    scale
+)
+
+addtest(scale_tagged_test
+    scale_tagged_test.cpp
+)
+target_link_libraries(scale_tagged_test
+    scale
+)
+
+addtest(scale_decomposable_test
+    scale_decomposable_test.cpp
+)
+target_link_libraries(scale_decomposable_test
+    scale
+)
+
+addtest(scale_bitvec_test
+    scale_bitvec_test.cpp
+)
+target_link_libraries(scale_bitvec_test
     scale
 )
 

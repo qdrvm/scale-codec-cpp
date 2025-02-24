@@ -5,27 +5,23 @@
  */
 
 #include <gtest/gtest.h>
+
+#include <set>
+
+#include <qtils/test/outcome.hpp>
+#include <scale/bit_vector.hpp>
 #include <scale/scale.hpp>
 
-using scale::BitVec;
+using scale::as_compact;
+using scale::BitVector;
 using scale::ByteArray;
 using scale::CompactInteger;
-using scale::decode;
 using scale::DecodeError;
-using scale::encode;
-using scale::Length;
-using scale::ScaleDecoderStream;
-using scale::ScaleEncoderStream;
-
-auto encodeLen = [](size_t i) {
-  ScaleEncoderStream s;
-#ifdef JAM_COMPATIBILITY_ENABLED
-  scale::detail::encodeJamCompactInteger(i, s);
-#else
-  scale::detail::encodeCompactInteger(i, s);
-#endif
-  return s.to_vector();
-};
+using scale::SmallBitVector;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
+using Encoder = scale::backend::ToBytes<>;
+using Decoder = scale::backend::FromBytes<>;
 
 /**
  * @given collection of 80 items of type uint8_t
@@ -39,15 +35,24 @@ TEST(CollectionTest, encodeCollectionOf80) {
     for (auto i = 0; i < length; ++i) {
       collection.push_back(i % 256);
     }
-    ScaleEncoderStream s;
-    ASSERT_NO_THROW((s << collection));
-    auto &&out = s.to_vector();
 
-    auto match = encodeLen(collection.size());  // header
+    ASSERT_OUTCOME_SUCCESS(out, encode(collection));
+
+    ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
     match.insert(match.end(), collection.begin(), collection.end());
 
     ASSERT_EQ(out, match);
   }
+}
+
+TEST(CollectionTest, encodeDecodeArray) {
+  std::array<uint8_t, 32> collection;
+  for (auto i = 0; i < collection.size(); ++i) {
+    collection[i] = i % 256;
+  }
+
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, (decode<std::array<uint8_t, 32>>(encoded)));
 }
 
 /**
@@ -57,13 +62,9 @@ TEST(CollectionTest, encodeCollectionOf80) {
  */
 TEST(CollectionTest, encodeVectorOfBool) {
   std::vector<bool> collection = {true, false, true, false, false, false};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  std::vector<bool> decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::vector<bool>>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -76,35 +77,27 @@ TEST(CollectionTest, encodeVectorOfBool) {
       0,  // sixths item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
-TEST(CollectionTest, encodeBitVec) {
-  auto collection = BitVec{{
-      // clang-format off
-      true, true, false, false, false, false, true, false, // 01000011
-      false, true, true, false, false                      // ___00110
-      // clang-format on
-  }};
-  ByteArray vector_representation = {0b01000011, 0b00110};
+TEST(CollectionTest, SmallBitVec) {
+  SmallBitVector collection;
+  for (auto x : {
+           // clang-format off
+           true, true, false, false, false, false, true, false, // 01000011
+           false, true, true, false, false                      // ___00110
+           // clang-format on
+       }) {
+    collection.push_back(x);
+  }
+  ASSERT_EQ(collection.size(), 13);
 
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&encoded = s.to_vector();
-
-  auto sizeLen = encodeLen(collection.bits.size()).size();
-  auto out =
-      std::span(std::next(encoded.data(), sizeLen), encoded.size() - sizeLen);
-
-  ASSERT_TRUE(std::ranges::equal(out, vector_representation));
-
-  auto stream = ScaleDecoderStream(encoded);
-  BitVec decoded;
-  stream >> decoded;
-  ASSERT_TRUE(std::ranges::equal(decoded.bits, collection.bits));
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<SmallBitVector<>>(encoded));
+  ASSERT_EQ(decoded.data(), collection.data());
 }
 
 /**
@@ -114,13 +107,8 @@ TEST(CollectionTest, encodeBitVec) {
  */
 TEST(CollectionTest, encodeCollectionUint16) {
   std::vector<uint16_t> collection = {1, 2, 3, 4};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
-
-  auto stream = ScaleDecoderStream(out);
-  std::vector<uint16_t> decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::vector<uint16_t>>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -131,22 +119,13 @@ TEST(CollectionTest, encodeCollectionUint16) {
       4, 0,  // fourth item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
-struct TestStruct : public std::vector<uint16_t> {
-  // friend ScaleEncoderStream &operator<<(ScaleEncoderStream &s,
-  //                                       const TestStruct &test_struct) {
-  //   return s << static_cast<const std::vector<uint16_t> &>(test_struct);
-  // }
-  // friend ScaleDecoderStream &operator>>(ScaleDecoderStream &s,
-  //                                       TestStruct &test_struct) {
-  //   return s >> static_cast<std::vector<uint16_t> &>(test_struct);
-  // }
-};
+struct TestStruct : public std::vector<uint16_t> {};
 
 /**
  * @given collection of items of type uint16_t, derived from std::vector
@@ -160,13 +139,8 @@ TEST(CollectionTest, encodeDerivedCollectionUint16) {
   collection.push_back(3);
   collection.push_back(4);
 
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
-
-  auto stream = ScaleDecoderStream(out);
-  TestStruct decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<TestStruct>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -177,10 +151,10 @@ TEST(CollectionTest, encodeDerivedCollectionUint16) {
       4, 0,  // fourth item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
 /**
@@ -190,13 +164,9 @@ TEST(CollectionTest, encodeDerivedCollectionUint16) {
  */
 TEST(CollectionTest, encodeDequeUint16) {
   std::deque<uint16_t> collection = {1, 2, 3, 4};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  std::deque<uint16_t> decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::deque<uint16_t>>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -207,10 +177,10 @@ TEST(CollectionTest, encodeDequeUint16) {
       4, 0,  // fourth item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
 /**
@@ -221,13 +191,9 @@ TEST(CollectionTest, encodeDequeUint16) {
 TEST(CollectionTest, encodeCollectionUint32) {
   std::vector<uint32_t> collection = {
       0x33221100, 0x77665544, 0xbbaa9988, 0xffeeddcc};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  std::deque<uint32_t> decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::deque<uint32_t>>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -238,10 +204,10 @@ TEST(CollectionTest, encodeCollectionUint32) {
       0xcc, 0xdd, 0xee, 0xff,  // fourth item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
 /**
@@ -251,13 +217,9 @@ TEST(CollectionTest, encodeCollectionUint32) {
  */
 TEST(CollectionTest, encodeCollectionUint64) {
   std::vector<uint64_t> collection = {0x7766554433221100, 0xffeeddccbbaa9988};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  std::deque<uint64_t> decoded;
-  stream >> decoded;
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::deque<uint64_t>>(encoded));
   ASSERT_TRUE(std::ranges::equal(decoded, collection));
 
   ByteArray data{
@@ -266,10 +228,10 @@ TEST(CollectionTest, encodeCollectionUint64) {
       0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,  // second item
       // clang-format on
   };
-  auto match = encodeLen(collection.size());
+  ASSERT_OUTCOME_SUCCESS(match, encode(as_compact(collection.size())));
   match.insert(match.end(), data.begin(), data.end());
 
-  ASSERT_TRUE(std::ranges::equal(out, match));
+  ASSERT_TRUE(std::ranges::equal(encoded, match));
 }
 
 /**
@@ -287,28 +249,26 @@ TEST(CollectionTest, encodeLongCollectionUint16) {
     collection.push_back(i % 256);
   }
 
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
 
-  auto stream = ScaleDecoderStream(out);
-  Length res{};
-  ASSERT_NO_THROW(stream >> res);
+  Decoder decoder(encoded);
+  size_t res;
+  ASSERT_NO_THROW(decoder >> as_compact(res));
   ASSERT_EQ(res, length);
 
   // now only 32768 bytes left in stream
-  ASSERT_EQ(stream.hasMore(length * sizeof(uint16_t)), true);
-  ASSERT_EQ(stream.hasMore(length * sizeof(uint16_t) + 1), false);
+  ASSERT_EQ(decoder.has(length * sizeof(uint16_t)), true);
+  ASSERT_EQ(decoder.has(length * sizeof(uint16_t) + 1), false);
 
   for (auto i = 0; i < length; ++i) {
     uint8_t byte = 0u;
-    ASSERT_NO_THROW(stream >> byte);
+    ASSERT_NO_THROW(decoder >> byte);
     ASSERT_EQ(byte, i % 256);
-    ASSERT_NO_THROW(stream >> byte);
+    ASSERT_NO_THROW(decoder >> byte);
     ASSERT_EQ(byte, 0);
   }
 
-  ASSERT_EQ(stream.hasMore(1), false);
+  ASSERT_EQ(decoder.has(1), false);
 }
 
 /**
@@ -329,26 +289,24 @@ TEST(CollectionTest, encodeVeryLongCollectionUint8) {
     collection.push_back(i % 256);
   }
 
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
 
-  auto stream = ScaleDecoderStream(out);
-  Length bi{};
-  ASSERT_NO_THROW(stream >> bi);
+  Decoder decoder(encoded);
+  size_t bi;
+  ASSERT_NO_THROW(decoder >> as_compact(bi));
   ASSERT_EQ(bi, 1048576);
 
   // now only 1048576 bytes left in stream
-  ASSERT_EQ(stream.hasMore(1048576), true);
-  ASSERT_EQ(stream.hasMore(1048576 + 1), false);
+  ASSERT_EQ(decoder.has(1048576), true);
+  ASSERT_EQ(decoder.has(1048576 + 1), false);
 
   for (auto i = 0; i < length; ++i) {
     uint8_t byte{0u};
-    ASSERT_NO_THROW((stream >> byte));
+    ASSERT_NO_THROW((decoder >> byte));
     ASSERT_EQ(byte, i % 256);
   }
 
-  ASSERT_EQ(stream.hasMore(1), false);
+  ASSERT_EQ(decoder.has(1), false);
 }
 
 /**
@@ -359,15 +317,11 @@ TEST(CollectionTest, encodeVeryLongCollectionUint8) {
  */
 TEST(CollectionTest, encodeMapTest) {
   std::map<uint32_t, uint32_t> collection = {{1, 5}, {2, 6}, {3, 7}, {4, 8}};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  std::map<uint32_t, uint32_t> decoded;
-  stream >> decoded;
-  ASSERT_TRUE(std::equal(
-      decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded,
+                         (decode<std::map<uint32_t, uint32_t>>(encoded)));
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
 }
 
 template <template <typename...> class BaseContainer,
@@ -380,7 +334,7 @@ class SizeLimitedContainer : public BaseContainer<Args...> {
   using Base::Base;
   using typename Base::size_type;
 
-  size_type max_size() const {
+  [[nodiscard]] size_type max_size() const {
     return WithMaxSize;
   }
 };
@@ -395,62 +349,48 @@ using SizeLimitedVector =
  * @then if max_size is enough, it is done successful, and error otherwise
  */
 TEST(CollectionTest, decodeSizeLimitedCollection) {
-  std::vector<int> collection{1, 2, 3};
+  std::vector collection{1, 2, 3};
 
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
 
   {
-    auto stream = ScaleDecoderStream(out);
-    SizeLimitedVector<4, int> decoded;
-    ASSERT_NO_THROW((stream >> decoded));
-    ASSERT_TRUE(std::equal(
-        decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+    ASSERT_OUTCOME_SUCCESS(decoded,
+                           (decode<SizeLimitedVector<4, int>>(encoded)));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
   }
   {
-    auto stream = ScaleDecoderStream(out);
-    SizeLimitedVector<3, int> decoded;
-    ASSERT_NO_THROW((stream >> decoded));
-    ASSERT_TRUE(std::equal(
-        decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+    ASSERT_OUTCOME_SUCCESS(decoded,
+                           (decode<SizeLimitedVector<3, int>>(encoded)));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
   }
   {
-    auto stream = ScaleDecoderStream(out);
-    SizeLimitedVector<2, int> decoded;
-
-    try {
-      stream >> decoded;
-      FAIL() << "Exception expected";
-    } catch (std::system_error &e) {
-      EXPECT_EQ(e.code(), DecodeError::TOO_MANY_ITEMS);
-    }
+    ASSERT_OUTCOME_ERROR((decode<SizeLimitedVector<2, int>>(encoded)),
+                         DecodeError::TOO_MANY_ITEMS);
   }
 }
 
-struct ExplicitlyDefinedAsDynamic : public std::vector<int> {
+struct ExplicitlyDefinedAsDynamic : std::vector<int> {
   using Collection = std::vector<int>;
+  using Collection::begin;
   using Collection::Collection;
+  using Collection::end;
+  using Collection::insert;
 };
 
 TEST(CollectionTest, encodeExplicitlyDefinedAsDynamic) {
   using TestCollection = ExplicitlyDefinedAsDynamic;
 
   const TestCollection collection{1, 2, 3, 4, 5};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
-  TestCollection decoded{0xff, 0xff, 0xff};
-  stream >> decoded;
-  ASSERT_TRUE(std::equal(
-      decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
 }
 
-struct ImplicitlyDefinedAsStatic : public std::vector<int> {
+struct ImplicitlyDefinedAsStatic : std::vector<int> {
   using Collection = std::vector<int>;
   using Collection::Collection;
+  ImplicitlyDefinedAsStatic() : Collection(5) {};
 
  private:
   using std::vector<int>::insert;
@@ -461,18 +401,15 @@ TEST(CollectionTest, encodeImplicitlyDefinedAsStatic) {
   using TestCollection = ImplicitlyDefinedAsStatic;
 
   const TestCollection collection{1, 2, 3, 4, 5};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  Decoder decoder(encoded);
   TestCollection decoded{0xff, 0xff, 0xff, 0xff, 0xff};
-  stream >> decoded;
-  ASSERT_TRUE(std::equal(
-      decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+  decoder >> decoded;
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
 }
 
-struct ImplicitlyDefinedAsDynamic : public std::vector<int> {
+struct ImplicitlyDefinedAsDynamic : std::vector<int> {
   using Collection = std::vector<int>;
   using Collection::Collection;
 };
@@ -481,18 +418,15 @@ TEST(CollectionTest, encodeImplicitlyDefinedAsDynamic) {
   using TestCollection = ImplicitlyDefinedAsDynamic;
 
   const TestCollection collection{1, 2, 3, 4, 5};
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  Decoder decoder(encoded);
   TestCollection decoded{0xff, 0xff, 0xff};
-  stream >> decoded;
-  ASSERT_TRUE(std::equal(
-      decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+  decoder >> decoded;
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
 }
 
-struct StaticSpan : public std::span<int, 5> {
+struct StaticSpan : std::span<int, 5> {
   using Collection = std::span<int, 5>;
   using Collection::Collection;
 };
@@ -502,14 +436,182 @@ TEST(CollectionTest, encodeStaticSpan) {
 
   std::array<int, 5> original_data{1, 2, 3, 4, 5};
   const TestCollection collection(original_data);
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << collection));
-  auto &&out = s.to_vector();
 
-  auto stream = ScaleDecoderStream(out);
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  Decoder decoder(encoded);
   std::array<int, 5> data{0xff, 0xff, 0xff, 0xff, 0xff};
   TestCollection decoded{data};
-  stream >> decoded;
-  ASSERT_TRUE(std::equal(
-      decoded.begin(), decoded.end(), collection.begin(), collection.end()));
+  decoder >> decoded;
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
+}
+
+TEST(CollectionTest, encodeStringView) {
+  using TestCollection = std::string_view;
+
+  std::string original_data = "string";
+  const TestCollection collection(original_data);
+
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::string>(encoded));
+  ASSERT_TRUE(std::ranges::equal(decoded, collection));
+}
+
+TEST(CollectionTest, decodeToMutableCollection) {
+  {
+    using TestCollection = uint16_t[scale::detail::MAX_FIELD_NUM + 1];
+
+    TestCollection collection{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                              12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    Decoder decoder(encoded);
+    TestCollection decoded;
+    ASSERT_NO_THROW(decode(decoded, decoder));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
+  }
+  {
+    using TestCollection =
+        std::array<uint16_t, scale::detail::MAX_FIELD_NUM + 1>;
+
+    TestCollection collection{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                              12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::vector<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::deque<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::list<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::set<uint16_t>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::map<uint16_t, uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::unordered_map<uint16_t, uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+}
+
+TEST(CollectionTest, decodeToImmutableCollection) {
+  {
+    using TestCollection = const uint16_t[scale::detail::MAX_FIELD_NUM + 1];
+
+    TestCollection collection = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                 12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    Decoder decoder(encoded);
+    TestCollection decoded{};
+    ASSERT_NO_THROW(decode(decoded, decoder));
+    ASSERT_TRUE(std::ranges::equal(decoded, collection));
+  }
+  {
+    using TestCollection =
+        std::array<const uint16_t, scale::detail::MAX_FIELD_NUM + 1>;
+
+    TestCollection collection{1, 2, 3, 4, 5};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  // Commented because clang warns
+  // {
+  //   using TestCollection = std::vector<const uint16_t>;
+  //
+  //   TestCollection collection{1, 2, 3, 4, 5};
+  //
+  //   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  //   ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+  //   ASSERT_EQ(decoded, collection);
+  // }
+  // {
+  //   using TestCollection = std::deque<const uint16_t>;
+  //
+  //   TestCollection collection{1, 2, 3, 4, 5};
+  //
+  //   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  //   ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+  //   ASSERT_EQ(decoded, collection);
+  // }
+  // {
+  //   using TestCollection = std::list<const uint16_t>;
+  //
+  //   TestCollection collection{1, 2, 3, 4, 5};
+  //
+  //   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  //   ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+  //   ASSERT_EQ(decoded, collection);
+  // }
+  // {
+  //   using TestCollection = std::set<const uint16_t>;
+  //
+  //   TestCollection collection{1, 2, 3, 4, 5};
+  //
+  //   ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+  //   ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+  //   ASSERT_EQ(decoded, collection);
+  // }
+  {
+    using TestCollection = std::map<uint16_t, const uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
+  {
+    using TestCollection = std::unordered_map<uint16_t, const uint16_t>;
+
+    TestCollection collection{{1, 11}, {2, 22}, {3, 33}};
+
+    ASSERT_OUTCOME_SUCCESS(encoded, encode(collection));
+    ASSERT_OUTCOME_SUCCESS(decoded, decode<TestCollection>(encoded));
+    ASSERT_EQ(decoded, collection);
+  }
 }

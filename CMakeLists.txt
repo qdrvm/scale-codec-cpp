@@ -7,7 +7,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 option(JAM_COMPATIBLE "Build compatible with JAM-codec" OFF)
-option(CUSTOM_CONFIG_SUPPORT "Support custom config of streams" OFF)
+option(CUSTOM_CONFIG_SUPPORT "Support custom config of coder" OFF)
 set(MAX_AGGREGATE_FIELDS 20 CACHE STRING "Max number of aggregates fields (1..1000); for generation")
 
 option(BUILD_TESTS "Whether to include the test suite in build" OFF)
@@ -42,7 +42,7 @@ if(BUILD_TESTS)
     endif()
 endif()
 
-project(Scale LANGUAGES CXX VERSION 1.1.0)
+project(Scale LANGUAGES CXX VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -80,6 +80,15 @@ endif ()
 include(GNUInstallDirs)
 
 install(TARGETS scale EXPORT scaleConfig
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
+
+install(TARGETS scale_append EXPORT scaleConfig
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

@@ -5,41 +5,39 @@
  */
 
 #include <gtest/gtest.h>
+
+#include <qtils/test/outcome.hpp>
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::ScaleDecoderStream;
-using scale::ScaleEncoderStream;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 /**
- * @given raw string
- * @when specified string is encoded by ScaleEncoderStream
+ * @given string_view
+ * @when specified string is encoded
  * @then encoded value meets expectations
  */
-TEST(StringTest, RawStringEncodeSuccess) {
-  auto *v = "abcdef";
-  ScaleEncoderStream s{};
-  ASSERT_NO_THROW((s << v));
-  auto buff = s.to_vector();
+TEST(String, StringViewEncode) {
+  constexpr std::string_view view = "abcdef";
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(view));
 
-  auto actual = std::span(buff).last(buff.size() - 1);
+  auto encoded_without_size = std::span(encoded).last(encoded.size() - 1);
   auto expected = ByteArray{'a', 'b', 'c', 'd', 'e', 'f'};
 
-  ASSERT_TRUE(std::ranges::equal(actual, expected));
+  ASSERT_TRUE(std::ranges::equal(encoded_without_size, expected));
 }
 
 /**
  * @given raw string
- * @when specified string is encoded by ScaleEncoderStream
+ * @when specified string is encoded
  * @then encoded value meets expectations
  */
-TEST(StringTest, StdStringEncodeSuccess) {
-  std::string v = "abcdef";
-  ScaleEncoderStream s;
-  ASSERT_NO_THROW((s << v));
-  auto buff = s.to_vector();
+TEST(String, StringEncode) {
+  std::string string = "abcdef";
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(string));
 
-  auto actual = std::span(buff).last(buff.size() - 1);
+  auto actual = std::span(encoded).last(encoded.size() - 1);
   auto expected = ByteArray{'a', 'b', 'c', 'd', 'e', 'f'};
 
   ASSERT_TRUE(std::ranges::equal(actual, expected));
@@ -47,18 +45,13 @@ TEST(StringTest, StdStringEncodeSuccess) {
 
 /**
  * @given byte array containing encoded string
- * @when string is decoded using ScaleDecoderStream
+ * @when string is decoded
  * @then decoded string matches expectations
  */
-TEST(StringTest, StringDecodeSuccess) {
-  std::string i = "abcdef";
-  ScaleEncoderStream es;
-  ASSERT_NO_THROW((es << i));
-  auto encoded = es.to_vector();
+TEST(String, StringDecode) {
+  std::string string = "abcdef";
 
-  ScaleDecoderStream ds(encoded);
-  std::string o;
-  ds >> o;
-
-  ASSERT_TRUE(std::ranges::equal(i, o));
+  ASSERT_OUTCOME_SUCCESS(encoded, encode(string));
+  ASSERT_OUTCOME_SUCCESS(decoded, decode<std::string>(encoded));
+  ASSERT_TRUE(std::ranges::equal(decoded, string));
 }

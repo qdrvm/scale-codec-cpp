@@ -5,7 +5,7 @@
 # generates C++ code based on a given integer N, and writes the modified content to the output file.
 # If the markers are not found, the script exits with an error.
 # If output file contents matches generated file contents, it won't be modified.
-# Usage: ./generate_aggregate_hpp.sh <PATH_HPP_IN> <N> <PATH_HPP_OUT>
+# Usage: ./generate_decompose_and_apply_hpp.sh <PATH_HPP_IN> <N> <PATH_HPP_OUT>
 # Where <PATH_HPP_IN> is the path to the template C++ source file, <N> is an integer between 0 and 1000,
 # and <PATH_HPP_OUT> is a path to the output file.
 

@@ -9,10 +9,10 @@
 #include <scale/scale.hpp>
 
 using scale::ByteArray;
-using scale::decode;
-using scale::encode;
-using scale::ScaleDecoderStream;
-using scale::ScaleEncoderStream;
+using scale::DecodeError;
+using scale::EncodeError;
+using scale::impl::memory::decode;
+using scale::impl::memory::encode;
 
 // Maximum available weight integer
 using Compact = scale::Compact<boost::multiprecision::uint1024_t>;
@@ -26,14 +26,11 @@ class CompactTest
   static std::pair<Compact, ByteArray> pair(Compact v, ByteArray m) {
     return std::make_pair(Compact(std::move(v)), std::move(m));
   }
-
- protected:
-  ScaleEncoderStream s;
 };
 
 /**
  * @given a value and corresponding buffer match of its encoding
- * @when value is encoded by means of ScaleEncoderStream
+ * @when given value being encoded
  * @then encoded value matches predefined buffer
  */
 TEST_P(CompactTest, EncodeSuccess) {
@@ -44,7 +41,7 @@ TEST_P(CompactTest, EncodeSuccess) {
 
 /**
  * @given a value and corresponding bytesof its encoding
- * @when value is decoded by means of ScaleDecoderStream from given bytes
+ * @when value is decoded from given bytes
  * @then decoded value matches predefined value
  */
 TEST_P(CompactTest, DecodeSuccess) {
@@ -134,15 +131,14 @@ INSTANTIATE_TEST_SUITE_P(
  * @when encode it directly as CompactInteger
  * @then obtain kValueIsTooBig error
  */
-TEST(ScaleCompactTest, EncodeOutOfRangeBigIntegerFails) {
+TEST(CompactTest, EncodeOutOfRangeBigIntegerFails) {
   // try to encode out of range big integer value MAX_BIGINT + 1
   // too big value, even for big integer case
   // we are going to have kValueIsTooBig error
   Compact v = BIGGEST_INT_FOR_COMPACT_REPRESENTATION + 1;
-
-  ScaleEncoderStream out;
-  ASSERT_ANY_THROW(out << v);            // value is too big, it isn't encoded
-  ASSERT_EQ(out.to_vector().size(), 0);  // nothing was written to buffer
+  ASSERT_OUTCOME_ERROR(
+    encode(v),
+    EncodeError::VALUE_TOO_BIG_FOR_COMPACT_REPRESENTATION);
 }
 
 /**
@@ -150,10 +146,10 @@ TEST(ScaleCompactTest, EncodeOutOfRangeBigIntegerFails) {
  * @when apply decodeInteger
  * @then get kNotEnoughData error
  */
-TEST(ScaleCompactTest, compactDecodeBigIntegerError) {
+TEST(CompactTest, compactDecodeBigIntegerError) {
   auto bytes = ByteArray{0xff, 0xff, 0xff, 0xff};
   ASSERT_OUTCOME_ERROR(decode<Compact>(bytes),
-                       scale::DecodeError::NOT_ENOUGH_DATA);
+                       DecodeError::NOT_ENOUGH_DATA);
 }
 
 /**
@@ -163,8 +159,8 @@ TEST(ScaleCompactTest, compactDecodeBigIntegerError) {
  */
 struct RedundantCompactTest : testing::TestWithParam<ByteArray> {};
 TEST_P(RedundantCompactTest, DecodeError) {
-  ASSERT_OUTCOME_ERROR(scale::decode<Compact>(GetParam()),
-                       scale::DecodeError::REDUNDANT_COMPACT_ENCODING);
+  ASSERT_OUTCOME_ERROR(decode<Compact>(GetParam()),
+                       DecodeError::REDUNDANT_COMPACT_ENCODING);
 }
 
 #ifdef JAM_COMPATIBILITY_ENABLED
@@ -204,4 +200,3 @@ INSTANTIATE_TEST_SUITE_P(
                       ByteArray{0b000001'11, 0, 0, 0, 0b01'000000, 0}));
 
 #endif
-
