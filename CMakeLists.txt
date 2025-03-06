@@ -8,9 +8,13 @@ cmake_minimum_required(VERSION 3.12)
 
 option(JAM_COMPATIBLE "Build compatible with JAM-codec" OFF)
 option(CUSTOM_CONFIG_SUPPORT "Support custom config of coder" OFF)
-set(MAX_AGGREGATE_FIELDS 20 CACHE STRING "Max number of aggregates fields (1..1000); for generation")
-
 option(BUILD_TESTS "Whether to include the test suite in build" OFF)
+
+option(SCALE_ASAN "Build with address sanitizer" OFF)
+option(SCALE_UBSAN "Build with undefined behavior sanitizer" OFF)
+option(SCALE_TSAN "Build with thread sanitizer" OFF)
+
+set(MAX_AGGREGATE_FIELDS 20 CACHE STRING "Max number of aggregates fields (1..1000); for generation")
 
 if (PACKAGE_MANAGER)
     if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
@@ -65,6 +69,19 @@ find_package(qtils CONFIG REQUIRED)
 SET(JAM_COMPATIBILITY_ENABLED "${JAM_COMPATIBLE}")
 set(CUSTOM_CONFIG_ENABLED "${CUSTOM_CONFIG_SUPPORT}")
 configure_file("${CMAKE_SOURCE_DIR}/include/scale/definitions.hpp.in" "${CMAKE_BINARY_DIR}/include/scale/definitions.hpp")
+
+if (SCALE_ASAN)
+    add_compile_options(-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer)
+endif()
+if (SCALE_UBSAN)
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=undefined -fno-omit-frame-pointer)
+endif()
+if (SCALE_TSAN)
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=thread -fno-omit-frame-pointer)
+endif()
 
 add_subdirectory(src)
 
