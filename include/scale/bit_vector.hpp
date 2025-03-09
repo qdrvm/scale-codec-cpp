@@ -1263,15 +1263,15 @@ namespace scale {
       if (sbf_ and new_size > arr_.size() * CHAR_BIT) {
         switch_to_vector();
       }
-      if (not sbf_) {
-        if (new_size != vec_.size() * CHAR_BIT) {
-          vec_.resize((new_size + CHAR_BIT - 1) / CHAR_BIT, 0);
-        }
-      }
       if (new_size <= size_) {
         auto data = sbf_ ? arr_.data() : vec_.data();
         data[new_size / CHAR_BIT] &=
             static_cast<uint8_t>(-1) >> (CHAR_BIT - (new_size % CHAR_BIT));
+      }
+      if (not sbf_) {
+        if (new_size != vec_.size() * CHAR_BIT) {
+          vec_.resize((new_size + CHAR_BIT - 1) / CHAR_BIT, 0);
+        }
       }
       if (sbf_ and new_size > size_) {
         for (auto i = (size_ + CHAR_BIT - 1) / CHAR_BIT;

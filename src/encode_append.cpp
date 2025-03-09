@@ -8,6 +8,7 @@
 #include <scale/scale.hpp>
 
 #include <scale/detail/compact_integer.hpp>
+#include <fmt/format.h>
 
 namespace scale {
 
@@ -29,31 +30,34 @@ namespace scale {
     auto encoded_old_size_len = lengthOfEncodedCompactInteger(old_size);
     OUTCOME_TRY(encoded_new_size, impl::memory::encode(as_compact(new_size)));
 
-    // If old and new encoded size length is equal, we don't need to copy the
-    // already encoded data.
-    if (encoded_old_size_len != encoded_new_size.size()) {
-      // reserve place for new size length, old vector and new vector
-      self_encoded.reserve(encoded_new_size.size()
-                           + (self_encoded.size() - encoded_old_size_len)
-                           + opaque_value.v.size());
+    const auto old_data_size = self_encoded.size();
+    const auto encoded_new_size_len = encoded_new_size.size();
+    const auto shift_size = encoded_new_size_len - encoded_old_size_len;
 
-      // shift the data bytes in a container to give space for the new Compact
-      // encoded length prefix
-      const auto shift_size = encoded_new_size.size() - encoded_old_size_len;
-      self_encoded.resize(self_encoded.size() + shift_size);
-      std::memmove(self_encoded.data() + encoded_new_size.size(),
+    // if old and new encoded size length is equal, no need to shift data
+    if (encoded_old_size_len != encoded_new_size_len) {
+      // reserve place for new size length, old vector and new vector
+      self_encoded.reserve(old_data_size + shift_size + opaque_value.v.size());
+
+      // increase size to make space for new size encoding
+      self_encoded.resize(old_data_size + shift_size);
+
+      // shift existing data
+      std::memmove(self_encoded.data() + encoded_new_size_len,
                    self_encoded.data() + encoded_old_size_len,
-                   self_encoded.size() - shift_size);
+                   old_data_size - encoded_old_size_len);
     } else {
       // reserve place for existing and new vector
-      self_encoded.reserve(self_encoded.size() + opaque_value.v.size());
+      self_encoded.reserve(old_data_size + opaque_value.v.size());
     }
-    // copy new size bytes
+
+    // copy new size bytes at the beginning
     std::memmove(
         self_encoded.data(), encoded_new_size.data(), encoded_new_size.size());
-    // copy new data bytes
+    // append new data bytes
     self_encoded.insert(
         self_encoded.end(), opaque_value.v.begin(), opaque_value.v.end());
     return outcome::success();
   }
+
 }  // namespace scale
