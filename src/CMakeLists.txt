@@ -10,27 +10,14 @@ add_custom_command(
     VERBATIM
 )
 
-add_library(scale
-    scale_error.cpp
+add_library(scale INTERFACE
     ${DECOMPOSE_AND_APPLY_HPP}
-    )
-target_include_directories(scale PUBLIC
+)
+target_include_directories(scale PUBLIC INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-target_link_libraries(scale
+)
+target_link_libraries(scale INTERFACE
     Boost::boost
-    )
-
-add_library(scale_append
-    encode_append.cpp
-)
-target_include_directories(scale_append PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-target_link_libraries(scale_append
-    scale
 )
