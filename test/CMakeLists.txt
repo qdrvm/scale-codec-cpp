@@ -59,7 +59,7 @@ addtest(scale_encode_append_test
     scale_encode_append_test.cpp
 )
 target_link_libraries(scale_encode_append_test
-    scale_append
+    scale
 )
 
 addtest(scale_compact_integer_test

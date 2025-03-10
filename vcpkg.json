@@ -1,12 +1,18 @@
 {
   "name": "scale",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "dependencies": [
     "qtils",
     "boost-multiprecision",
     "boost-endian"
   ],
   "features": {
+    "jam-compatibility": {
+      "description": "Encoding/decoding compatible with JAM"
+    },
+    "configurable-coding": {
+      "description": "Enable configurable encoding/decoding"
+    },
     "scale-tests": {
       "description": "Test of scale encoding/decoding",
       "dependencies": [
