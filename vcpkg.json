@@ -18,24 +18,6 @@
       "dependencies": [
         "gtest"
       ]
-    },
-    "asan": {
-      "description": "Test of scale encoding/decoding with address sanitizer",
-      "dependencies": [
-        "scale-tests"
-      ]
-    },
-    "ubsan": {
-      "description": "Test of scale encoding/decoding with undefined behavior sanitizer",
-      "dependencies": [
-        "scale-tests"
-      ]
-    },
-    "tsan": {
-      "description": "Test of scale encoding/decoding with threads sanitizer",
-      "dependencies": [
-        "scale-tests"
-      ]
     }
   }
 }

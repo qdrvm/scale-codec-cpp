@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.12)
 
 # Select package manager
 if(PACKAGE_MANAGER)
-  if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
+  if(NOT PACKAGE_MANAGER MATCHES "^(hunter|vcpkg)$")
     message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
   endif()
 else()
@@ -23,47 +23,15 @@ else()
 endif()
 message(STATUS "Selected package manager: ${PACKAGE_MANAGER}")
 
-# Default values of options
-set(JAM_COMPATIBLE_DEFAULT OFF)
-set(CUSTOM_CONFIG_SUPPORT_DEFAULT OFF)
-set(BUILD_TESTS_DEFAULT OFF)
-set(ASAN_DEFAULT OFF)
-set(TSAN_DEFAULT OFF)
-set(UBSAN_DEFAULT OFF)
-
-# Adjust value by vcpkg manifest if any
-if(PACKAGE_MANAGER STREQUAL "vcpkg")
-  if("jam-compatibility" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(JAM_COMPATIBLE_DEFAULT ON)
-  endif()
-  if("configurable-coding" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(CUSTOM_CONFIG_SUPPORT_DEFAULT ON)
-  endif()
-  if("scale-tests" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(BUILD_TESTS_DEFAULT ON)
-  endif()
-  if("asan" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(ASAN_DEFAULT ON)
-  endif()
-  if("tsan" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(TSAN_DEFAULT ON)
-  endif()
-  if("ubsan" IN_LIST VCPKG_MANIFEST_FEATURES)
-    set(UBSAN_DEFAULT ON)
-  endif()
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
+    # find_package() uses upper-case <PACKAGENAME>_ROOT variables.
+    cmake_policy(SET CMP0144 NEW)
 endif()
 
-# Init options
-option(JAM_COMPATIBLE "Build compatible with JAM-codec" ${JAM_COMPATIBLE_DEFAULT})
-option(CUSTOM_CONFIG_SUPPORT "Support custom config of coder" ${CUSTOM_CONFIG_SUPPORT_DEFAULT})
-option(BUILD_TESTS "Whether to include the test suite in build" ${BUILD_TESTS_DEFAULT})
-option(ASAN "Build tests with address sanitizer" ${ASAN_DEFAUL})
-option(TSAN "Build tests with thread sanitizer" ${TSAN_DEFAUL})
-option(UBSAN "Build tests with undefined behavior sanitizer" ${UBSAN_DEFAUL})
-if(ASAN OR TSAN OR UBSAN)
-  if(NOT BUILD_TESTS)
-    message(FATAL_ERROR "Sanitizer required but build of test is not set")
-  endif()
+if(PACKAGE_MANAGER STREQUAL "hunter")
+  include("cmake/Hunter/init.cmake")
+else()
+  set(HUNTER_ENABLED OFF)
 endif()
 
 # Adjust vcpkg features by custom defined option (for deploy possible dependencies)
@@ -73,19 +41,23 @@ if(PACKAGE_MANAGER STREQUAL "vcpkg")
   endif()
 endif()
 
-set(MAX_AGGREGATE_FIELDS 20 CACHE STRING "Max number of aggregates fields (1..1000); for generation")
-
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
-  cmake_policy(SET CMP0144 NEW)
-endif()
-
-if(PACKAGE_MANAGER STREQUAL "hunter")
-  include("cmake/Hunter/init.cmake")
-else()
-  set(HUNTER_ENABLED OFF)
-endif()
-
 project(Scale LANGUAGES CXX VERSION 2.0.1)
+
+include(cmake/feature_option.cmake)
+
+# Init options
+feature_option(JAM_COMPATIBLE "jam-compatibility" "Build compatible with JAM-codec" OFF)
+feature_option(CUSTOM_CONFIG_SUPPORT "configurable-coding" "Support custom config of coder" OFF)
+feature_option(BUILD_TESTS "scale-tests" "Whether to include the test suite in build" OFF)
+option(ASAN "Build tests with address sanitizer" OFF)
+option(TSAN "Build tests with thread sanitizer" OFF)
+option(UBSAN "Build tests with undefined behavior sanitizer" OFF)
+
+if((ASAN OR TSAN OR UBSAN) AND NOT BUILD_TESTS)
+    message(FATAL_ERROR "Since SCALE is header-only, sanitizers should only be enabled for tests")
+endif()
+
+set(MAX_AGGREGATE_FIELDS 20 CACHE STRING "Max number of aggregates fields (1..1000); for generation")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -125,7 +97,19 @@ if(UBSAN)
   add_link_options(-fsanitize=undefined -fno-omit-frame-pointer)
 endif()
 
-add_subdirectory(src)
+include(cmake/generate_decompose_and_apply.cmake)
+
+add_library(scale INTERFACE
+    ${DECOMPOSE_AND_APPLY_HPP}
+)
+target_include_directories(scale PUBLIC INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(scale INTERFACE
+    Boost::boost
+)
 
 if(BUILD_TESTS)
   enable_testing()
