@@ -204,3 +204,8 @@ namespace scale::detail::decomposable {
                               or DecomposableAggregate<T>);
 
 }  // namespace scale::detail::decomposable
+
+namespace scale {
+  using detail::decomposable::Decomposable;
+  using detail::decomposable::DecomposableArray;
+}  // namespace scale

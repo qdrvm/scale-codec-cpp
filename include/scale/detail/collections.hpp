@@ -29,8 +29,6 @@ namespace scale {
   using detail::collections::RandomExtensibleCollection;
   using detail::collections::ResizeableCollection;
   using detail::collections::StaticCollection;
-  using detail::decomposable::Decomposable;
-  using detail::decomposable::DecomposableArray;
 
   /**
    * @brief Encodes a dynamic collection using SCALE encoding.
