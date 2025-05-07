@@ -5,114 +5,200 @@
  */
 
 /**
- * @brief Implements encoding and validation of enumeration values using SCALE
- * encoding.
+ * @brief Implements encoding and validation of enumeration values using SCALE.
  *
  * This file provides utilities for handling enumerations in SCALE encoding.
  * It allows defining constraints on enum values via `enum_traits`
  * specializations, ensuring that only valid values are encoded or decoded.
+ *
  * There are two ways to specialize an enumeration type:
+ * - Define a range using `min_value` and `max_value`.
+ * - Provide an explicit list using `valid_values`.
  *
- * 1. **Defining a range of valid values** using `min_value` and `max_value`.
- * 2. **Providing an explicit list of valid values** using `valid_values`.
- *
- * The validation ensures that any decoded value belongs to the expected set,
- * reducing the risk of unexpected errors when processing SCALE-encoded data.
+ * Validation guarantees decoded values are within expected bounds,
+ * reducing risk when handling SCALE-encoded data.
  */
 
 #pragma once
 
+#include <algorithm>
+#include <limits>
+#include <string_view>
 #include <type_traits>
 
 #include <scale/detail/tagged.hpp>
 #include <scale/outcome/outcome_throw.hpp>
 #include <scale/scale_error.hpp>
-#include <scale/types.hpp>
 
 namespace scale {
 
   namespace detail::enumerations {
 
+#if defined(__clang__) || defined(__GNUC__)
+#define ENUM_NAME_PRETTY_FUNCTION __PRETTY_FUNCTION__
+    constexpr std::string_view enum_prefix =
+        "constexpr std::string_view enum_name_impl() [with auto V = ";
+    constexpr std::string_view enum_suffix = "]";
+#else
+#error Unsupported compiler
+#endif
+
+    /**
+     * @brief Extracts enumeration name from the compiler-specific string.
+     * @tparam V The enum value.
+     */
+    template <auto V>
+    constexpr std::string_view enum_name_impl() {
+      constexpr std::string_view func = ENUM_NAME_PRETTY_FUNCTION;
+      constexpr std::size_t start = func.find(enum_prefix) + enum_prefix.size();
+      constexpr std::size_t end = func.find(enum_suffix, start);
+      constexpr std::string_view full = func.substr(start, end - start);
+      constexpr std::size_t colons = full.find("::");
+      if (colons == std::string_view::npos) return {};
+      return full.substr(colons + 2);
+    }
+
+    /**
+     * @brief Concept that checks if a type is an enumeration.
+     */
     template <typename T>
     concept Enumeration = std::is_enum_v<std::remove_cvref_t<T>>;
 
     /**
-     * @brief Traits for enum validation.
-     *
-     * Provides two specialization choices:
-     * - `min_value` and `max_value` convertible to `std::underlying_type_t<E>`.
-     * - A container of `std::underlying_type_t<E>` named `valid_values`,
-     * listing valid values.
-     *
-     * @note Check the macros below for specialization convenience.
-     * @tparam E The enum type.
+     * @brief Traits struct to be specialized for enumeration validation.
      */
     template <typename E>
-      requires std::is_enum_v<E>
-    struct [[deprecated(
-        "Check the doc comment to see the specialization options")]]  //
-    enum_traits final {
-      /// Used to detect an unspecialized enum_traits
-      static constexpr bool is_default = true;
-    };
+    struct enum_traits;  // default not specialized
+
+    namespace detail_impl {
+
+      template <typename E>
+      concept HasValidValues = requires { enum_traits<E>::valid_values; };
+
+      template <typename E>
+      concept HasMinMax = requires {
+        enum_traits<E>::min_value;
+        enum_traits<E>::max_value;
+      };
+
+      template <typename E, typename U = std::underlying_type_t<E>, U... Vs>
+      constexpr bool is_valid_enum_value_by_reflection_impl(
+          U value, std::integer_sequence<U, Vs...>) {
+        return ((enum_name_impl<static_cast<E>(Vs)>().size() > 0
+                 && static_cast<U>(static_cast<E>(Vs)) == value)
+                || ...);
+      }
+
+      template <typename E, int... Is>
+      constexpr bool call_with_casted_signed_range(
+          std::underlying_type_t<E> value, std::integer_sequence<int, Is...>) {
+        using U = std::underlying_type_t<E>;
+        constexpr int min = -128;
+        return is_valid_enum_value_by_reflection_impl<E>(
+            value, std::integer_sequence<U, static_cast<U>(min + Is)...>{});
+      }
+
+      template <typename E, int... Is>
+      constexpr bool call_with_casted_unsigned_range(
+          std::underlying_type_t<E> value, std::integer_sequence<int, Is...>) {
+        using U = std::underlying_type_t<E>;
+        return is_valid_enum_value_by_reflection_impl<E>(
+            value, std::integer_sequence<U, static_cast<U>(Is)...>{});
+      }
+
+      /**
+       * @brief Fallback validation using reflection for enums of size 1 byte.
+       */
+      template <typename E>
+        requires(sizeof(std::underlying_type_t<E>) == 1)
+      constexpr bool is_valid_enum_value_by_reflection(
+          std::underlying_type_t<E> value) {
+        using U = std::underlying_type_t<E>;
+
+        if constexpr (std::is_signed_v<U>) {
+          constexpr int min = -128;
+          constexpr int max = 127;
+          return call_with_casted_signed_range<E>(
+              value, std::make_integer_sequence<int, max - min + 1>{});
+        } else {
+          constexpr int max = 255;
+          return call_with_casted_unsigned_range<E>(
+              value, std::make_integer_sequence<int, max + 1>{});
+        }
+      }
+
+      /**
+       * @brief Validates enum value using min/max range.
+       */
+      template <typename T>
+        requires HasMinMax<std::decay_t<T>>
+      constexpr bool is_valid_enum_value_range(
+          std::underlying_type_t<std::decay_t<T>> value) noexcept {
+        using E = std::decay_t<T>;
+        constexpr auto Min = enum_traits<E>::min_value;
+        constexpr auto Max = enum_traits<E>::max_value;
+        return value >= Min && value <= Max;
+      }
+
+      /**
+       * @brief Validates enum value against list of valid values.
+       */
+      template <typename T>
+        requires HasValidValues<std::decay_t<T>>
+      constexpr bool is_valid_enum_value_list(
+          std::underlying_type_t<std::decay_t<T>> value) noexcept {
+        using E = std::decay_t<T>;
+        const auto &valid_values = enum_traits<E>::valid_values;
+        return std::find(valid_values.begin(),
+                         valid_values.end(),
+                         static_cast<E>(value))
+               != valid_values.end();
+      }
+
+    }  // namespace detail_impl
 
     /**
-     * @brief Checks if a given value is within a defined range of valid enum
-     * values.
-     * @tparam T The input type (expected to be an enum or convertible
-     * underlying type).
-     * @param value The value to check.
-     * @return True if the value is within the range, false otherwise.
-     */
-    template <typename T,
-              typename E = std::decay_t<T>,
-              typename E_traits = enum_traits<E>,
-              std::underlying_type_t<E> Min = E_traits::min_value,
-              std::underlying_type_t<E> Max = E_traits::max_value>
-    constexpr bool is_valid_enum_value(
-        std::underlying_type_t<E> value) noexcept {
-      return value >= Min && value <= Max;
-    }
-
-    /**
-     * @brief Checks if a given value is within an explicitly defined set of
-     * valid enum values.
-     * @tparam T The input type (expected to be an enum or convertible
-     * underlying type).
-     * @param value The value to check.
-     * @return True if the value is listed in `valid_values`, false otherwise.
-     */
-    template <typename T,
-              typename E = std::decay_t<T>,
-              typename E_traits = enum_traits<E>,
-              typename = decltype(E_traits::valid_values)>
-    constexpr bool is_valid_enum_value(
-        std::underlying_type_t<E> value) noexcept {
-      const auto &valid_values = E_traits::valid_values;
-      return std::find(std::begin(valid_values),
-                       std::end(valid_values),
-                       static_cast<E>(value))
-             != std::end(valid_values);
-    }
-
-    /**
-     * @brief Default case for unspecialized enum types.
-     *
-     * This function always returns `true`, but a `static_assert` ensures that
-     * an explicit specialization of `enum_traits` is required.
-     *
-     * @tparam T The input type (expected to be an enum).
-     * @return Always true, but triggers a compilation error if used.
+     * @brief Marker struct used for deprecated fallback validation.
      */
     template <typename T>
-      requires enum_traits<std::decay_t<T>>::is_default
-    [[deprecated(
-        "Please specialize scale::enum_traits for your enum so it can be "
-        "validated during decoding")]]
+    struct scale_enum_validation_warning;
+
+    /**
+     * @brief Fallback validator for unsupported enums.
+     */
+    template <typename T>
+    struct [[deprecated(
+        "Cannot validate enum because no valid_values or min/max in "
+        "enum_traits and reflection is unavailable for enums with underlying "
+        "types >1 byte. "
+        "Define enum_traits to enable safe validation during SCALE "
+        "decoding.")]] scale_enum_validation_warning {};
+
+    /**
+     * @brief Central enum validation entry point.
+     * @tparam T Enum type.
+     * @param value The underlying integer value.
+     * @return true if value is valid.
+     */
+    template <typename T>
+      requires std::is_enum_v<std::decay_t<T>>
     constexpr bool is_valid_enum_value(
-        std::underlying_type_t<std::decay_t<T>>) noexcept {
-      return true;
+        std::underlying_type_t<std::decay_t<T>> value) noexcept {
+      using E = std::decay_t<T>;
+
+      if constexpr (detail_impl::HasValidValues<E>) {
+        return detail_impl::is_valid_enum_value_list<T>(value);
+      } else if constexpr (detail_impl::HasMinMax<E>) {
+        return detail_impl::is_valid_enum_value_range<T>(value);
+      } else if constexpr (sizeof(std::underlying_type_t<E>) == 1) {
+        return detail_impl::is_valid_enum_value_by_reflection<E>(value);
+      } else {
+        [[maybe_unused]] constexpr auto _ =
+            sizeof(scale_enum_validation_warning<E>);
+        return true;
+      }
     }
+
   }  // namespace detail::enumerations
 
   using detail::enumerations::enum_traits;
@@ -120,9 +206,10 @@ namespace scale {
   using detail::enumerations::is_valid_enum_value;
 
   /**
-   * @brief Encodes an enumeration into its underlying type.
-   * @param enumeration The enumeration value to encode.
-   * @param encoder SCALE encoder.
+   * @brief Encodes an enum value using SCALE encoding.
+   * @tparam T Enum type.
+   * @param enumeration Enum value to encode.
+   * @param encoder Encoder instance.
    */
   void encode(const Enumeration auto &enumeration, Encoder &encoder)
     requires NoTagged<decltype(enumeration)>
@@ -133,9 +220,10 @@ namespace scale {
   }
 
   /**
-   * @brief Decodes an enumeration from its underlying type.
-   * @param v The enumeration value to decode into.
-   * @param decoder SCALE decoder.
+   * @brief Decodes an enum value using SCALE decoding.
+   * @tparam T Enum type.
+   * @param v Enum variable to store the decoded value.
+   * @param decoder Decoder instance.
    */
   void decode(Enumeration auto &v, Decoder &decoder)
     requires NoTagged<decltype(v)>
@@ -153,12 +241,12 @@ namespace scale {
 }  // namespace scale
 
 /**
- * @brief Defines a valid range for an enumeration.
- * @note You should use this macro only in the global namespace
- * @param enum_namespace The namespace of the enum.
- * @param enum_name The enum type.
- * @param min The minimum valid value.
- * @param max The maximum valid value.
+ * @def SCALE_DEFINE_ENUM_VALUE_RANGE
+ * @brief Defines a valid value range for an enum.
+ * @param enum_namespace Namespace where enum is defined.
+ * @param enum_name Enum type name.
+ * @param min Minimum valid value.
+ * @param max Maximum valid value.
  */
 #define SCALE_DEFINE_ENUM_VALUE_RANGE(enum_namespace, enum_name, min, max)  \
   template <>                                                               \
@@ -169,10 +257,11 @@ namespace scale {
   };
 
 /**
- * @brief Defines a valid list of values for an enumeration.
- * @param enum_namespace The namespace of the enum.
- * @param enum_name The enum type.
- * @param ... The valid values.
+ * @def SCALE_DEFINE_ENUM_VALUE_LIST
+ * @brief Defines an explicit list of valid enum values.
+ * @param enum_namespace Namespace where enum is defined.
+ * @param enum_name Enum type name.
+ * @param ... List of valid values.
  */
 #define SCALE_DEFINE_ENUM_VALUE_LIST(enum_namespace, enum_name, ...) \
   template <>                                                        \
