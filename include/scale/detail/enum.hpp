@@ -175,25 +175,8 @@ namespace scale {
 
     }  // namespace detail_impl
 
-    /**
-     * @brief Marker struct used for deprecated fallback validation.
-     */
     template <typename T>
-    struct scale_enum_validation_warning;
-
-    template <typename>
-    struct always_false : std::false_type {};
-
-    /**
-     * @brief Fallback validator for unsupported enums.
-     */
-    template <typename T>
-    struct [[deprecated(
-        "Cannot validate enum because no valid_values or min/max in "
-        "enum_traits and reflection is unavailable for enums with underlying "
-        "types >1 byte. "
-        "Define enum_traits to enable safe validation during SCALE "
-        "decoding.")]] scale_enum_validation_warning {};
+    constexpr bool CannotValidateEnum = false;
 
     /**
      * @brief Central enum validation entry point.
@@ -214,9 +197,9 @@ namespace scale {
       } else if constexpr (sizeof(std::underlying_type_t<E>) == 1) {
         return detail_impl::is_valid_enum_value_by_reflection<E>(value);
       } else {
-        static_assert(always_false<E>::value,
-                      "Cannot validate enum: define enum_traits<> with "
-                      "min/max or valid_values.");
+        static_assert(CannotValidateEnum<T>,
+                      "Cannot validate enum: "
+                      "define enum_traits<> with min/max or valid_values.");
         return true;
       }
     }
