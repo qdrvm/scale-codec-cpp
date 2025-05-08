@@ -34,11 +34,25 @@ namespace scale {
 
   namespace detail::enumerations {
 
-#if defined(__clang__) || defined(__GNUC__)
 #define ENUM_NAME_PRETTY_FUNCTION __PRETTY_FUNCTION__
-    constexpr std::string_view enum_prefix =
-        "constexpr std::string_view enum_name_impl() [with auto V = ";
+#if defined(__clang__)
+    // clang-format off
+    // Invalid:
+    //   "std::string_view scale::detail::enumerations::enum_name_impl() [V = (Baz)-128]"
+    // Valid:
+    //   "std::string_view scale::detail::enumerations::enum_name_impl() [V = Enum_ValidatingByReflection_I8_Test::TestBody()::Baz::A]"
+    // clang-format on
+    constexpr std::string_view enum_prefix = "EnumValue = ";
     constexpr std::string_view enum_suffix = "]";
+#elif defined(__GNUC__)
+    // clang-format off
+    // Invalid:
+    //   "std::string_view scale::detail::enumerations::enum_name_impl() [with auto V = (Enum_ValidatingByReflection_I8_Test::TestBody::Baz)-128; std::string_view = std::basic_string_view<char>]"
+    // Valid:
+    //   "std::string_view scale::detail::enumerations::enum_name_impl() [with auto V = Enum_ValidatingByReflection_I8_Test::TestBody::Baz::A; std::string_view = std::basic_string_view<char>]"
+    // clang-format on
+    constexpr std::string_view enum_prefix = "EnumValue = ";
+    constexpr std::string_view enum_suffix = "; ";
 #else
 #error Unsupported compiler
 #endif
@@ -47,15 +61,19 @@ namespace scale {
      * @brief Extracts enumeration name from the compiler-specific string.
      * @tparam V The enum value.
      */
-    template <auto V>
-    constexpr std::string_view enum_name_impl() {
+    template <auto EnumValue>
+    std::string_view enum_name_impl() {
       constexpr std::string_view func = ENUM_NAME_PRETTY_FUNCTION;
-      constexpr std::size_t start = func.find(enum_prefix) + enum_prefix.size();
+      constexpr std::size_t prefix_pos = func.find(enum_prefix);
+      assert(prefix_pos != std::string_view::npos);
+      constexpr std::size_t start = prefix_pos + enum_prefix.size();
+      if (func[start] == '(') return {}; // Invalid, because wrapped by parenthesis)
       constexpr std::size_t end = func.find(enum_suffix, start);
       constexpr std::string_view full = func.substr(start, end - start);
-      constexpr std::size_t colons = full.find("::");
-      if (colons == std::string_view::npos) return {};
-      return full.substr(colons + 2);
+      constexpr std::size_t colons = full.rfind("::");
+      if (colons == std::string_view::npos) return {}; // Invalid, no namespace
+      constexpr std::string_view result = full.substr(colons + 2);
+      return result;
     }
 
     /**
@@ -163,6 +181,9 @@ namespace scale {
     template <typename T>
     struct scale_enum_validation_warning;
 
+    template <typename>
+    struct always_false : std::false_type {};
+
     /**
      * @brief Fallback validator for unsupported enums.
      */
@@ -193,8 +214,9 @@ namespace scale {
       } else if constexpr (sizeof(std::underlying_type_t<E>) == 1) {
         return detail_impl::is_valid_enum_value_by_reflection<E>(value);
       } else {
-        [[maybe_unused]] constexpr auto _ =
-            sizeof(scale_enum_validation_warning<E>);
+        static_assert(always_false<E>::value,
+                      "Cannot validate enum: define enum_traits<> with "
+                      "min/max or valid_values.");
         return true;
       }
     }
