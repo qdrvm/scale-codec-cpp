@@ -62,16 +62,20 @@ namespace scale {
      * @tparam V The enum value.
      */
     template <auto EnumValue>
-    constexpr std::string_view enum_name_impl() {
+    consteval std::string_view enum_name_impl() {
       constexpr std::string_view func = ENUM_NAME_PRETTY_FUNCTION;
       constexpr std::size_t prefix_pos = func.find(enum_prefix);
       static_assert(prefix_pos != std::string_view::npos);
       constexpr std::size_t start = prefix_pos + enum_prefix.size();
-      if (func[start] == '(') return {}; // Invalid, because wrapped by parenthesis)
+      if (func[start] == '(')
+        return {};  // Invalid: __PRETTY_FUNCTION__ prints invalid value of enum
+                    // as number C-style-casted into enum type, i.e. `(Enum)-1`.
       constexpr std::size_t end = func.find(enum_suffix, start);
       constexpr std::string_view full = func.substr(start, end - start);
       constexpr std::size_t colons = full.rfind("::");
-      if (colons == std::string_view::npos) return {}; // Invalid, no namespace
+      if (colons == std::string_view::npos)
+        return {};  // Invalid: __PRETTY_FUNCTION__ always prints valid value
+                    // with type, i.e. `Enum::value`
       return full.substr(colons + 2);
     }
 
@@ -90,12 +94,18 @@ namespace scale {
     namespace detail_impl {
 
       template <typename E>
-      concept HasValidValues = requires { enum_traits<E>::valid_values; };
+      concept HasValidValues = requires {
+        { enum_traits<E>::valid_values } -> std::ranges::range;
+      };
 
       template <typename E>
       concept HasMinMax = requires {
-        enum_traits<E>::min_value;
-        enum_traits<E>::max_value;
+        {
+          enum_traits<E>::min_value
+        } -> std::convertible_to<std::underlying_type_t<E>>;
+        {
+          enum_traits<E>::max_value
+        } -> std::convertible_to<std::underlying_type_t<E>>;
       };
 
       template <typename E, typename U = std::underlying_type_t<E>, U... Vs>
@@ -183,8 +193,7 @@ namespace scale {
      * @param value The underlying integer value.
      * @return true if value is valid.
      */
-    template <typename T>
-      requires std::is_enum_v<std::decay_t<T>>
+    template <Enumeration T>
     constexpr bool is_valid_enum_value(
         std::underlying_type_t<std::decay_t<T>> value) noexcept {
       using E = std::decay_t<T>;
