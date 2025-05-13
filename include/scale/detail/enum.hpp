@@ -65,7 +65,7 @@ namespace scale {
     constexpr std::string_view enum_name_impl() {
       constexpr std::string_view func = ENUM_NAME_PRETTY_FUNCTION;
       constexpr std::size_t prefix_pos = func.find(enum_prefix);
-      assert(prefix_pos != std::string_view::npos);
+      static_assert(prefix_pos != std::string_view::npos);
       constexpr std::size_t start = prefix_pos + enum_prefix.size();
       if (func[start] == '(') return {}; // Invalid, because wrapped by parenthesis)
       constexpr std::size_t end = func.find(enum_suffix, start);
