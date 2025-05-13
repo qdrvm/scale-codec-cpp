@@ -62,7 +62,7 @@ namespace scale {
      * @tparam V The enum value.
      */
     template <auto EnumValue>
-    std::string_view enum_name_impl() {
+    constexpr std::string_view enum_name_impl() {
       constexpr std::string_view func = ENUM_NAME_PRETTY_FUNCTION;
       constexpr std::size_t prefix_pos = func.find(enum_prefix);
       assert(prefix_pos != std::string_view::npos);
@@ -72,8 +72,7 @@ namespace scale {
       constexpr std::string_view full = func.substr(start, end - start);
       constexpr std::size_t colons = full.rfind("::");
       if (colons == std::string_view::npos) return {}; // Invalid, no namespace
-      constexpr std::string_view result = full.substr(colons + 2);
-      return result;
+      return full.substr(colons + 2);
     }
 
     /**
